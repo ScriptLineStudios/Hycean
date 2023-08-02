@@ -33,6 +33,7 @@ class App:
             self.clock.tick(self.fps)
 
             for event in pygame.event.get():
+                self.state.handle_event(event)
                 if event.type == QUIT:
                     pygame.quit()
                     raise SystemExit
@@ -41,7 +42,7 @@ class App:
             renderer.clear()
 
             self.state.update()
-            self.state.render(renderer)
+            self.state.render()
 
             renderer.present()
             self.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'
