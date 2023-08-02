@@ -7,3 +7,7 @@ class State:
 
     def render(self, renderer):
         pass
+
+    def handle_event(self, event):
+        # optional
+        pass
