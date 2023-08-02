@@ -39,18 +39,18 @@ class Camera:
     def handle_input(self):
         keys = pygame.key.get_pressed()
 
-        # if keys[pygame.K_d]:
-        #     self.position += self.speed * glm.normalize(glm.cross(self.orientation, self.up))
-        # if keys[pygame.K_a]:
-        #     self.position -= self.speed * glm.normalize(glm.cross(self.orientation, self.up))
-        # if keys[pygame.K_w]:
-        #     self.position -= self.speed * self.orientation
-        # if keys[pygame.K_s]:
-        #     self.position += self.speed * self.orientation
-        # if keys[pygame.K_SPACE]:
-        #     self.position += self.speed * self.up
-        # if keys[pygame.K_LSHIFT]:
-        #     self.position -= self.speed * self.up
+        if keys[pygame.K_d]:
+            self.position += self.speed * glm.normalize(glm.cross(self.orientation, self.up))
+        if keys[pygame.K_a]:
+            self.position -= self.speed * glm.normalize(glm.cross(self.orientation, self.up))
+        if keys[pygame.K_w]:
+            self.position -= self.speed * self.orientation
+        if keys[pygame.K_s]:
+            self.position += self.speed * self.orientation
+        if keys[pygame.K_SPACE]:
+            self.position += self.speed * self.up
+        if keys[pygame.K_LSHIFT]:
+            self.position -= self.speed * self.up
 
         if self.hidden:
             mx, my = pygame.mouse.get_pos()
@@ -128,7 +128,7 @@ class Model:
                     if line.startswith("v "):
                         vertex = line.split(" ")[1:]
                         vertex = pygame.Vector3([float(v) for v in vertex])
-                        vertex.z += 2
+                        # vertex.z += 2
                         vertices.append(pygame_vec_to_glm_vec(pygame.Vector3(vertex.x, vertex.y, vertex.z)))
                     
                     if line.startswith("vt "):
@@ -175,6 +175,8 @@ class Model:
 
         self.rotation_matrix = glm.mat4()
         self.rotation = glm.vec3(1, 1, 1)
+        self.scale = glm.vec3(1, 1, 1)
+        self.scale_matrix = glm.mat4()
 
         self.average_z = 0
         self.degree = 0
@@ -249,13 +251,16 @@ class Model:
 
         self.position_matrix = glm.mat4()
         self.rotation_matrix = glm.mat4()
+        self.scale_matrix = glm.mat4()
 
         self.position_matrix = glm.translate(self.position_matrix, self.position)
+        self.scale_matrix = glm.scale(self.scale_matrix, self.scale)
+
         self.rotation_matrix = glm.rotate(self.rotation_matrix, glm.radians(self.degree), self.rotation)
 
         for i, vertex in enumerate(vertices):
             v = glm.vec4(vertex)
-            vertices[i] = (matrix * self.rotation_matrix * self.position_matrix) * v
+            vertices[i] = (matrix * self.position_matrix * self.rotation_matrix * self.scale_matrix) * v
             self.average_z += vertices[i][2]
 
         self.average_z /= len(vertices)
@@ -267,11 +272,11 @@ class Model:
 
         screen_vertices = self.screen(self.three_to_two(vertices))
 
-        for face in self.faces:
-            cull = self.calculate_culling(camera.orientation, vertices[face.vertices]) # By fist culling we can save on Z calculations
-
-            if cull < 0:
-                self.render_face(display, face, vertices, old_vertices, light, screen_vertices, camera)
+        if glm.distance(self.position, camera.position) < 100:
+            for face in self.faces:
+                cull = self.calculate_culling(camera.orientation, vertices[face.vertices]) # By fist culling we can save on Z calculations
+                if cull < 0:
+                    self.render_face(display, face, vertices, old_vertices, light, screen_vertices, camera)
 
 class ModelRenderer:
     def __init__(self, camera):
