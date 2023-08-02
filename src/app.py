@@ -7,10 +7,9 @@ from src.scripts.states import *
 
 pygame.init()
 
-
 class App:
     def __init__(self, fps):
-        self.ScreenSize = (960, 540)
+        self.ScreenSize = (1000, 800)
         caption = 'Game Title'
         
         self.window = pygame._sdl2.Window(caption, self.ScreenSize)
@@ -18,10 +17,11 @@ class App:
 
         self.states = {
             #'main_menu': Menu()
-            'game': Game(),
+            'space': Space(self.renderer),
+            # 'ocean': Ocean(),
         }
 
-        self.crnt_state = 'game'
+        self.crnt_state = 'space'
         self.state = self.states[self.crnt_state]
 
         self.clock = pygame.time.Clock()

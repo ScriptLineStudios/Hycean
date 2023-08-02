@@ -1,11 +1,11 @@
 class State:
-    def __init__(self):
-        pass
+    def __init__(self, renderer):
+        self.renderer = renderer
 
     def update(self):
         pass
 
-    def render(self, renderer):
+    def render(self):
         pass
 
     def handle_event(self, event):
