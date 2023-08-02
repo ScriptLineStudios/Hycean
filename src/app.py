@@ -25,7 +25,7 @@ class App:
         self.state = self.states[self.crnt_state]
 
         self.clock = pygame.time.Clock()
-        self.fps = fps
+        self.fps = 120
 
     def run(self):
         renderer = self.renderer

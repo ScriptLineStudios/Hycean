@@ -1,5 +1,9 @@
 from .state import State
 from src.scripts.entities.player import Player
+from src.scripts.entities.planet import Planet
+from src.scripts.entities.entity import Entity
+
+import glm
 
 from pygame_3d import *
 
@@ -11,14 +15,26 @@ class Space(State):
         self.background_image = pygame.image.load("src/assets/Space Background.png")
         self.background_image = pygame._sdl2.Texture.from_surface(self.renderer, self.background_image)
 
-        self.player = Player("src/assets/models/spaceship/spaceship_high2.obj", "src/assets/models/spaceship/spaceship_high2.mtl")
         self.camera = Camera()
         self.model_renderer = ModelRenderer(self.camera)
+        self.camera.orientation = glm.vec3(     0.860336,     0.509041,   -0.0264359 )
+        self.camera.position = glm.vec3(      3.77888,      4.04609,      2.04851 )
+
+        self.player = Player(self, "src/assets/models/spaceship/spaceship_high2.obj", "src/assets/models/spaceship/spaceship_high2.mtl")
+        self.planet = Planet(self, "src/assets/models/planet/planet.obj", "src/assets/models/planet/planet.mtl")
 
         self.model_renderer.add_model(self.player)
+        self.model_renderer.add_model(self.planet)
+
 
     def update(self):
-        ...
+        self.camera.position += self.player.direction
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            self.player.degree -= 1
+        if keys[pygame.K_a]:
+            self.player.degree += 1
 
     def render(self):
         self.renderer.draw_color = (0, 0, 0, 255)

@@ -39,18 +39,18 @@ class Camera:
     def handle_input(self):
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_d]:
-            self.position += self.speed * glm.normalize(glm.cross(self.orientation, self.up))
-        if keys[pygame.K_a]:
-            self.position -= self.speed * glm.normalize(glm.cross(self.orientation, self.up))
-        if keys[pygame.K_w]:
-            self.position -= self.speed * self.orientation
-        if keys[pygame.K_s]:
-            self.position += self.speed * self.orientation
-        if keys[pygame.K_SPACE]:
-            self.position += self.speed * self.up
-        if keys[pygame.K_LSHIFT]:
-            self.position -= self.speed * self.up
+        # if keys[pygame.K_d]:
+        #     self.position += self.speed * glm.normalize(glm.cross(self.orientation, self.up))
+        # if keys[pygame.K_a]:
+        #     self.position -= self.speed * glm.normalize(glm.cross(self.orientation, self.up))
+        # if keys[pygame.K_w]:
+        #     self.position -= self.speed * self.orientation
+        # if keys[pygame.K_s]:
+        #     self.position += self.speed * self.orientation
+        # if keys[pygame.K_SPACE]:
+        #     self.position += self.speed * self.up
+        # if keys[pygame.K_LSHIFT]:
+        #     self.position -= self.speed * self.up
 
         if self.hidden:
             mx, my = pygame.mouse.get_pos()
@@ -216,6 +216,7 @@ class Model:
         normals = self.normals[face.normals]
         d = glm.max(glm.dot(glm.vec3(normals[0]), -light), 0.0)
         color = glm.vec3(face.material["color"])
+
         if d > 0.4:
             # pygame.draw.polygon(display, Model.color(color * d), vertices[face.vertices])
             color = Model.color(color * d)
@@ -254,7 +255,7 @@ class Model:
 
         for i, vertex in enumerate(vertices):
             v = glm.vec4(vertex)
-            vertices[i] = (matrix * self.position_matrix * self.rotation_matrix) * v
+            vertices[i] = (matrix * self.rotation_matrix * self.position_matrix) * v
             self.average_z += vertices[i][2]
 
         self.average_z /= len(vertices)
