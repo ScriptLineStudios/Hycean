@@ -2,6 +2,7 @@ from .state import State
 from src.scripts.entities.player import Player
 from src.scripts.entities.planet import Planet
 from src.scripts.entities.entity import Entity
+from src.scripts.particles import SpaceParticles
 import random
 
 import glm
@@ -43,7 +44,9 @@ class Space(State):
         pygame.image.save(self.map_texture, "map.png")
 
         self.model_renderer.add_model(self.player)
-        
+
+        self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 100)
+
     def update(self):
         self.player.rotation = self.camera.orientation
         self.player.degree = 1
@@ -59,9 +62,10 @@ class Space(State):
 
         self.renderer.blit(self.background_image, pygame.Rect(0, 0, 1000, 800))
 
-        
         matrix = self.model_renderer.update_camera()
         self.model_renderer.sort_models()
+
+        self.SpaceParticles.render(matrix, self.camera)
 
         for model in self.model_renderer.models:
             self.model_renderer.render_model(model, self.renderer, matrix)
