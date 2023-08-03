@@ -3,6 +3,9 @@ from src.scripts.entities.player import Player
 from src.scripts.entities.planet import Planet
 from src.scripts.entities.entity import Entity
 from src.scripts.particles import SpaceParticles
+from src.scripts.controller import Controller
+
+from copy import copy
 import random
 
 import glm
@@ -14,16 +17,22 @@ class Space(State):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        #put actual here
+        ScreenSize = (1000, 800)
+
         self.background_image = pygame.image.load("src/assets/Space Background.png")
         self.background_image = pygame._sdl2.Texture.from_surface(self.renderer, self.background_image)
 
         self.camera = Camera()
         self.model_renderer = ModelRenderer(self.camera)
-        self.camera.orientation = glm.vec3(     0.860336,     0.509041,   -0.0264359 )
-        self.camera.position = glm.vec3(      3.77888,      4.04609,      0.04851 )
+        self.camera.orientation = glm.vec3(1, -0.1, -0.02)
+        #self.camera.position = glm.vec3(0, 0, 0)
+        self.camera.position = glm.vec3(3.1, 1.2, 0)
 
         self.player = Player(self, "src/assets/models/spaceship/spaceship_high2.obj", "src/assets/models/spaceship/spaceship_high2.mtl")
-        
+
+        self.controller = Controller(self.renderer, ScreenSize)
+
         self.map = {}
 
         self.map_texture = pygame.Surface((1000, 1000))
@@ -48,8 +57,20 @@ class Space(State):
         self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 100)
 
     def update(self):
-        self.player.rotation = self.camera.orientation
-        self.player.degree = 1
+        self.controller.update()
+
+        self.player.position = copy(self.camera.position)
+
+        direction = glm.vec3(
+            self.camera.orientation[0], 
+            self.camera.orientation[1],
+            self.camera.orientation[2]
+            )
+
+        self.player.position.x -= direction[0] * 3.4
+        self.player.position.y -= direction[1] * 1.4 + 2
+        
+        self.player.position.z -= direction[2] * 2
 
     def render(self):
         self.map_texture.fill((100, 100, 100))
@@ -73,12 +94,19 @@ class Space(State):
             if type(model) == Planet:
                 pygame.draw.circle(self.map_texture, (0, 0, 255), (model.position.x + 500, model.position.z + 500), 15)
 
+        self.controller.draw_debug()
 
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.map_texture), pygame.Rect(0, 0, 200, 200))
 
     def handle_event(self, event):
+        self.controller.handle_event(event)
+        
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 pygame.mouse.set_pos((500, 400))
                 pygame.mouse.set_visible(self.camera.hidden)
                 self.camera.hidden = not self.camera.hidden
+
+            if event.button == 2:
+                print(self.camera.position)
+                print(self.camera.orientation)

@@ -30,11 +30,17 @@ class Camera:
         self.up = glm.vec3(0, 1, 0)
         self.orientation = glm.vec3(0, 0, -1)
 
-        
+        self.free_cam = False
+        self.acceleration = glm.vec3(0, 0, 0)
+        self.velocity = glm.vec3(0, 0, 0)
+        self.damping = glm.vec3(0.98, 0.98, 0.98)
 
         self.speed = .1
         self.hidden = False
         self.sensitivity = 10
+
+        self.accSpeed = self.speed * 0.25
+        self.maxSpeed = 5
 
     def handle_input(self):
         keys = pygame.key.get_pressed()
@@ -44,9 +50,12 @@ class Camera:
         if keys[pygame.K_a]:
             self.position -= self.speed * glm.normalize(glm.cross(self.orientation, self.up))
         if keys[pygame.K_w]:
-            self.position -= self.speed * self.orientation
+            #self.position -= self.speed * self.orientation
+            self.acceleration -= self.accSpeed * self.orientation
         if keys[pygame.K_s]:
-            self.position += self.speed * self.orientation
+            #self.position += self.speed * self.orientation
+            self.acceleration += (self.accSpeed * self.orientation) / 2
+
         if keys[pygame.K_SPACE]:
             self.position += self.speed * self.up
         if keys[pygame.K_LSHIFT]:
@@ -66,6 +75,13 @@ class Camera:
 
     def update(self):
         self.handle_input()
+
+        self.velocity += self.acceleration
+        self.position += self.velocity
+        self.velocity *= self.damping
+        
+        self.acceleration *= 0
+
         view = glm.mat4()
 
         view = glm.lookAt(self.position, self.position + self.orientation, self.up)
@@ -182,17 +198,18 @@ class Model:
         self.degree = 0
 
     @staticmethod
-    @jit(nopython=True, fastmath=True, nogil=True)
+    #commented for now so it runs faster
+    #@jit(nopython=True, fastmath=True, nogil=True)
     def screen(v):
         return np.column_stack((((v[:, 0] + 1) / 2) * 1000, (1 - (v[:, 1] + 1) / 2) * 800))
 
     @staticmethod
-    @jit(nopython=True, fastmath=True, nogil=True)
+    #@jit(nopython=True, fastmath=True, nogil=True)
     def three_to_two(v):
         return np.column_stack(((v[:, 0] / (v[:, 2] + 1)), (v[:, 1] / (v[:, 2] + 1))))
 
     @staticmethod
-    @jit(nopython=True, fastmath=True, nogil=True)
+    #@jit(nopython=True, fastmath=True, nogil=True)
     def color(_color):
         off = 0
         _color = np.array([

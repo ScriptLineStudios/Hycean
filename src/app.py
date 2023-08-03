@@ -8,7 +8,7 @@ from src.scripts.states import *
 pygame.init()
 
 class App:
-    def __init__(self, fps):
+    def __init__(self):
         self.ScreenSize = (1000, 800)
         caption = 'Game Title'
         

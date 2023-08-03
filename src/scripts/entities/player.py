@@ -10,7 +10,7 @@ class Player(Entity):
         super().__init__(*args, **kwargs)   
         self.scene = scene
         self.rotation = glm.vec3(1, 0, 0)
-        # self.direction = glm.vec3(-0.01, 0, 0)
+        self.direction = glm.vec3(0, 0, 0)
 
     def render(self, *args, **kwargs):
         super().render(*args, **kwargs)
