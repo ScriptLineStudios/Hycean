@@ -4,6 +4,7 @@ import random
 from .entity import Entity
 
 from pygame_3d import *
+from src.scripts.rect3D import Rect3
 
 class Planet(Entity):
     def __init__(self, scene, *args, **kwargs):
@@ -38,8 +39,13 @@ class Planet(Entity):
                     adjust = np.array(adjust)
                     self.vertices[face.vertices] += adjust / 10
                     face.material["color"] = (0.1, 0.8, 0.2)
+        
+        self.origin_rect = Rect3.from_vertices(self.vertices)
+        self.rect = copy(self.origin_rect)
+        #doing this so on the first frame collision doesn't get detected
+        self.rect.position = (1000, 1000, 1000)
 
     def render(self, *args, **kwargs):
         super().render(*args, **kwargs)
 
-    
+        self.rect.position = (self.origin_rect.position + self.position)

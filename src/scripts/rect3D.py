@@ -51,8 +51,8 @@ class Rect3:
             Face([2, 1, 5], redColor),
         ]
     
-    def from_vertices(self, vertices):
-        #haven't tested this yet | to change
+    @classmethod
+    def from_vertices(cls, vertices):
         #that's not good for the performance I think💀😭
         xVerts = [vertex[0] for vertex in vertices]
         yVerts = [vertex[1] for vertex in vertices]
@@ -96,7 +96,6 @@ class Rect3:
 
     @x.setter
     def x(self, value):
-        #when setting value to x, also updating all these
         self._x = value
 
         self.update_vertices(
@@ -112,7 +111,6 @@ class Rect3:
 
     @y.setter
     def y(self, value):
-        #when setting value to y, also updating all these
         self._y = value
 
         self.update_vertices(
@@ -128,7 +126,6 @@ class Rect3:
 
     @y.setter
     def y(self, value):
-        #when setting value to y, also updating all these
         self._y = value
 
         self.update_vertices(
@@ -144,7 +141,6 @@ class Rect3:
 
     @z.setter
     def z(self, value):
-        #when setting value to z, also updating all these
         self._z = value
 
         self.update_vertices(
@@ -198,9 +194,7 @@ class Rect3:
     def draw_debug(self, camera):
         #*imagine here drawing faces (for debug)*
         # (could be done outside the rect3 class)
-        for face in self.faces:
-            vertices = [self.vertices[vert] for vert in face.vertices]
-            camera.draw_triangle(vertices)
+        ...
     
 
     def update_size(self, width, height, depth):
@@ -326,7 +320,6 @@ def ray_to_rect(position, direction, rect, steps):
 
 
 def load_obstacles(file):
-    #again, haven't tested🫠
     rects = []
     with open(file, 'r') as file:
         for rect in load(file):

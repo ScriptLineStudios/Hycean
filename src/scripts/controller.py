@@ -47,8 +47,6 @@ class Controller:
             (self.center[0], 0),
             (self.center[0], self.ScreenSize[1])
         )
-        
-        
 
         self.renderer.draw_line(self.center, self.position)
         self.renderer.draw_line(hLine[0], hLine[1])

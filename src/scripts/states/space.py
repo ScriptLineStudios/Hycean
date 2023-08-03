@@ -38,11 +38,14 @@ class Space(State):
         self.map_texture = pygame.Surface((1000, 1000))
         self.map_texture.fill((0, 0, 0))
 
+        self.obstacles = []
+
         for x in range(10):
             self.planet2 = Planet(self, "src/assets/models/planet/planet.obj", "src/assets/models/planet/planet.mtl")
             x, y = random.randrange(-500, 500), random.randrange(-500, 500)
             self.planet2.position = glm.vec3(x, 0, y)
             self.model_renderer.add_model(self.planet2)
+            self.obstacles.append(self.planet2)
 
             x += 500
             y += 500
@@ -72,6 +75,14 @@ class Space(State):
         
         self.player.position.z -= direction[2] * 2
 
+        self.player.update()
+
+        for obstacle in self.obstacles:
+            obstacleRect = copy(obstacle.rect)
+            
+            if self.player.rect.collide_rect(obstacleRect):
+                print('Player - Planet collision detected')
+
     def render(self):
         self.map_texture.fill((100, 100, 100))
         self.renderer.draw_color = (0, 0, 0, 255)
@@ -93,7 +104,7 @@ class Space(State):
 
             if type(model) == Planet:
                 pygame.draw.circle(self.map_texture, (0, 0, 255), (model.position.x + 500, model.position.z + 500), 15)
-
+        
         self.controller.draw_debug()
 
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.map_texture), pygame.Rect(0, 0, 200, 200))
