@@ -1,5 +1,6 @@
 import glm
 import random
+from copy import copy
 
 from .entity import Entity
 
