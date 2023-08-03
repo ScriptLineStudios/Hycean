@@ -1,10 +1,12 @@
 import pygame
+import glm
+
 from pygame import Vector2
 from pygame.locals import *
 
-
 class Controller:
-    def __init__(self, renderer, ScreenSize):
+    def __init__(self, scene, renderer, ScreenSize):
+        self.scene = scene
         self.renderer = renderer
         self.ScreenSize = ScreenSize
         self.position = Vector2(0, 0)
@@ -24,17 +26,13 @@ class Controller:
         self.disable = False
 
     def update(self):
-        direction = self.position - self.center
-        self.angleMove = direction.elementwise() * self.angle_p_pix
-
-        #print(self.angleMove)
-        if False:#direction != (0, 0)  
-            move = direction.normalize()
-    
-            move = move.elementwise() * self.angle
-
-            self.position = self.position - move
-            pygame.mouse.set_pos(self.position - move)
+        if self.scene.camera.hidden:
+            self.position = pygame.mouse.get_pos()
+            direction = self.position - self.center
+            
+            self.angleMove = direction.elementwise() * self.angle_p_pix
+            self.scene.player.rot_x += self.angleMove.x * 40
+            self.scene.player.rot_z += self.angleMove.y * 40
 
     def draw_debug(self):
         self.renderer.draw_color = (0, 255, 0, 255)
@@ -53,5 +51,7 @@ class Controller:
         self.renderer.draw_line(vLine[0], vLine[1])
 
     def handle_event(self, event):
-        if event.type == MOUSEMOTION:
-            self.position = Vector2(event.pos)
+
+        pass
+        # if event.type == MOUSEMOTION:
+        #     self.position = Vector2(event.pos)

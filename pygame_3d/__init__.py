@@ -42,38 +42,41 @@ class Camera:
         self.accSpeed = self.speed * 0.25
         self.maxSpeed = 5
 
+        self.t = 0
+
     def handle_input(self):
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_d]:
-            self.position += self.speed * glm.normalize(glm.cross(self.orientation, self.up))
-        if keys[pygame.K_a]:
-            self.position -= self.speed * glm.normalize(glm.cross(self.orientation, self.up))
-        if keys[pygame.K_w]:
-            if self.free_cam:
-                self.position -= self.speed * self.orientation
-            else:
-                self.acceleration -= self.accSpeed * self.orientation
-        if keys[pygame.K_s]:
-            if self.free_cam:
-                self.position += self.speed * self.orientation
-            else:
-                self.acceleration += (self.accSpeed * self.orientation) / 2
+        # if keys[pygame.K_d]:
+        #     self.position += self.speed * glm.normalize(glm.cross(self.orientation, self.up))
+        # if keys[pygame.K_a]:
+        #     self.position -= self.speed * glm.normalize(glm.cross(self.orientation, self.up))
+        # if keys[pygame.K_w]:
+        #     if self.free_cam:
+        #         self.position -= self.speed * self.orientation
+        #     else:
+        #         self.acceleration -= self.accSpeed * self.orientation
+        # if keys[pygame.K_s]:
+        #     if self.free_cam:
+        #         self.position += self.speed * self.orientation
+        #     else:
+        #         self.acceleration += (self.accSpeed * self.orientation) / 2
 
-        if keys[pygame.K_SPACE]:
-            self.position += self.speed * self.up
-        if keys[pygame.K_LSHIFT]:
-            self.position -= self.speed * self.up
+        # if keys[pygame.K_SPACE]:
+        #     self.position += self.speed * self.up
+        # if keys[pygame.K_LSHIFT]:
+        #     self.position -= self.speed * self.up
 
         if self.hidden:
             mx, my = pygame.mouse.get_pos()
             rot_x = self.sensitivity * (my - 400) / 400
             rot_y = self.sensitivity * (mx - 500) / 500
-            
-            new_orientation = glm.rotate(self.orientation, glm.radians(rot_x), glm.normalize(glm.cross(self.orientation, self.up)))
+
+            self.t += 1
+            new_orientation = glm.rotate(self.orientation, glm.radians(rot_x / 1), glm.normalize(glm.cross(self.orientation, self.up)))
             self.orientation = new_orientation
 
-            self.orientation = glm.rotate(self.orientation, glm.radians(rot_y), self.up)
+            self.orientation = glm.rotate(self.orientation, glm.radians(rot_y / 1), self.up)
             
             pygame.mouse.set_pos((500, 400))
 
@@ -266,18 +269,19 @@ class Model:
                 display.fill_triangle(screen_vertices[face.vertices][0], screen_vertices[face.vertices][1], screen_vertices[face.vertices][2])
 
 
-    def render(self, display, matrix, light, camera):
+    def render(self, display, matrix, light, camera, use_rotate=True, always_draw=False):
         vertices = self.vertices.copy()
         old_vertices = vertices
 
-        self.position_matrix = glm.mat4()
-        self.rotation_matrix = glm.mat4()
         self.scale_matrix = glm.mat4()
 
+        self.position_matrix = glm.mat4()
         self.position_matrix = glm.translate(self.position_matrix, self.position)
         self.scale_matrix = glm.scale(self.scale_matrix, self.scale)
 
-        self.rotation_matrix = glm.rotate(self.rotation_matrix, glm.radians(self.degree), self.rotation)
+        if use_rotate:
+            self.rotation_matrix = glm.mat4()
+            self.rotation_matrix = glm.rotate(self.rotation_matrix, glm.radians(self.degree), self.rotation)
 
         for i, vertex in enumerate(vertices):
             v = glm.vec4(vertex)
@@ -293,7 +297,7 @@ class Model:
 
         screen_vertices = self.screen(self.three_to_two(vertices))
 
-        if glm.distance(self.position, camera.position) < 100:
+        if glm.distance(self.position, camera.position) < 100 or always_draw:
             for face in self.faces:
                 cull = self.calculate_culling(camera.orientation, vertices[face.vertices]) # By fist culling we can save on Z calculations
                 if cull < 0:

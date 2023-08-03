@@ -24,14 +24,17 @@ class Space(State):
         self.background_image = pygame._sdl2.Texture.from_surface(self.renderer, self.background_image)
 
         self.camera = Camera()
+        self.original_matrix = None
+
         self.model_renderer = ModelRenderer(self.camera)
         self.camera.orientation = glm.vec3(1, -0.1, -0.02)
         #self.camera.position = glm.vec3(0, 0, 0)
-        self.camera.position = glm.vec3(3.1, 1.2, 0)
+        self.cam_target_position = glm.vec3(3.1, 1.2, 0)
+        self.camera.position = self.cam_target_position
+        self.last_orientation = glm.vec3(0, 0,0)
 
         self.player = Player(self, "src/assets/models/spaceship/spaceship_high2.obj", "src/assets/models/spaceship/spaceship_high2.mtl")
 
-        self.controller = Controller(self.renderer, ScreenSize)
 
         self.map = {}
 
@@ -39,6 +42,7 @@ class Space(State):
         self.map_texture.fill((0, 0, 0))
 
         self.obstacles = []
+        self.controller = Controller(self, self.renderer, ScreenSize)
 
         for x in range(10):
             self.planet2 = Planet(self, "src/assets/models/planet/planet.obj", "src/assets/models/planet/planet.mtl")
@@ -62,20 +66,34 @@ class Space(State):
     def update(self):
         self.controller.update()
 
-        self.player.position = copy(self.camera.position)
-
-        direction = glm.vec3(
-            self.camera.orientation[0], 
-            self.camera.orientation[1],
-            self.camera.orientation[2]
-            )
-
-        self.player.position.x -= direction[0] * 3.4
-        self.player.position.y -= direction[1] * 1.4 + 2
-        
-        self.player.position.z -= direction[2] * 2
-
         self.player.update()
+        self.camera.position.x -= glm.normalize(self.camera.orientation).x / 3
+        self.camera.position.z -= glm.normalize(self.camera.orientation).z / 3
+        self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5
+
+        # self.player.position.x = (self.camera.position.x - self.camera.orientation.x * 2) - 1
+        # self.player.position.z = (self.camera.position.z - self.camera.orientation.z * 2)
+        # self.player.position.y = self.camera.position.y - 2
+        # keys = pygame.key.get_pressed()
+
+        # if keys[pygame.K_d]:
+        #     self.player.rot_x += 1
+        #     self.camera.orientation = glm.rotate(self.camera.orientation, glm.radians(0.5), self.camera.up)
+
+        # if keys[pygame.K_a]:
+        #     self.player.rot_x -= 1
+        #     self.camera.orientation = glm.rotate(self.camera.orientation, glm.radians(-0.5), self.camera.up)
+
+        # if keys[pygame.K_w]:
+        #     self.player.rot_z -= 1
+        #     self.camera.position.y += 0.4
+
+        # if keys[pygame.K_s]:
+        #     self.player.rot_z += 1
+        #     self.camera.position.y -= 0.4
+
+        self.player.rot_x += -self.player.rot_x / 100
+        self.player.rot_z += -self.player.rot_z / 100
 
         for obstacle in self.obstacles:
             obstacleRect = copy(obstacle.rect)
@@ -94,18 +112,27 @@ class Space(State):
 
         self.renderer.blit(self.background_image, pygame.Rect(0, 0, 1000, 800))
 
+        self.last_orientation = glm.vec3(self.camera.orientation.x, self.camera.orientation.y, self.camera.orientation.z) 
         matrix = self.model_renderer.update_camera()
-        self.model_renderer.sort_models()
+        if self.original_matrix is None:
+            self.original_matrix = matrix
 
-        self.SpaceParticles.render(matrix, self.camera)
+        self.model_renderer.sort_models()
+        # self.SpaceParticles.render(matrix, self.camera)
+
 
         for model in self.model_renderer.models:
-            self.model_renderer.render_model(model, self.renderer, matrix)
+            if type(model) != Player:
+                self.model_renderer.render_model(model, self.renderer, matrix)
+            else:
+                self.model_renderer.render_model(model, self.renderer, self.original_matrix)
 
             if type(model) == Planet:
                 pygame.draw.circle(self.map_texture, (0, 0, 255), (model.position.x + 500, model.position.z + 500), 15)
-        
-        self.controller.draw_debug()
+
+        # self.player.position_matrix = self.pos
+        # self.player.rotation_matrix = self.rot
+
 
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.map_texture), pygame.Rect(0, 0, 200, 200))
 

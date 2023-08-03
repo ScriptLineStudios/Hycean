@@ -32,6 +32,7 @@ class App:
         while True:
             self.clock.tick(self.fps)
 
+            self.state.update()
             for event in pygame.event.get():
                 self.state.handle_event(event)
                 if event.type == QUIT:
@@ -41,7 +42,6 @@ class App:
             renderer.draw_color = (255, 255, 255, 255)
             renderer.clear()
 
-            self.state.update()
             self.state.render()
 
             renderer.present()
