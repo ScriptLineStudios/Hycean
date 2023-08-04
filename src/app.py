@@ -10,7 +10,7 @@ pygame.init()
 class App:
     def __init__(self):
         self.ScreenSize = (1000, 800)
-        caption = 'Game Title'
+        caption = 'Hycean'
         
         self.window = pygame._sdl2.Window(caption, self.ScreenSize)
         self.renderer = pygame._sdl2.Renderer(self.window)
@@ -18,14 +18,14 @@ class App:
         self.states = {
             #'main_menu': Menu()
             'space': Space(self.renderer),
-            # 'ocean': Ocean(),
+            'ocean': Ocean(self.renderer),
         }
 
-        self.crnt_state = 'space'
+        self.crnt_state = 'ocean'
         self.state = self.states[self.crnt_state]
 
         self.clock = pygame.time.Clock()
-        self.fps = 120
+        self.fps = 60
 
     def run(self):
         renderer = self.renderer

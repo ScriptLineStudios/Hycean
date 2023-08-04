@@ -191,6 +191,8 @@ class Model:
         self.normals = np.array(self.normals)
         self.faces = np.array(self.faces)
 
+        self.original_vertices = self.vertices.copy()
+
         self.position_matrix = glm.mat4()
         self.position = glm.vec3()
 
@@ -201,6 +203,14 @@ class Model:
 
         self.average_z = 0
         self.degree = 0
+
+        vertices = self.vertices.copy()
+        for i, vertex in enumerate(vertices):
+            v = glm.vec4(vertex)
+            vertices[i] = self.scale_matrix * (glm.mat4() * self.position_matrix * self.rotation_matrix) * v
+            self.average_z += vertices[i][2]
+
+        self.average_z /= len(vertices)
 
     @staticmethod
     #commented for now so it's faster to debug
@@ -268,7 +278,7 @@ class Model:
 
 
     def render(self, display, matrix, light, camera, use_rotate=True, always_draw=False):
-        vertices = self.vertices.copy()
+        vertices = self.vertices
         old_vertices = vertices
 
         self.scale_matrix = glm.mat4()
@@ -282,20 +292,18 @@ class Model:
             self.rotation_matrix = glm.rotate(self.rotation_matrix, glm.radians(self.degree), self.rotation)
 
         for i, vertex in enumerate(vertices):
-            v = glm.vec4(vertex)
+            v = glm.vec4(self.original_vertices[i])
             vertices[i] = self.scale_matrix * (matrix * self.position_matrix * self.rotation_matrix) * v
             self.average_z += vertices[i][2]
 
         self.average_z /= len(vertices)
 
-        self.faces = sorted(
-            self.faces, 
-            key=lambda face: -sum([vertices[j][2] for j in face.vertices]) / face.vertices_length
-        )
-
-        screen_vertices = self.screen(self.three_to_two(vertices))
-
         if glm.distance(self.position, camera.position) < 100 or always_draw:
+            screen_vertices = self.screen(self.three_to_two(vertices))
+            self.faces = sorted(
+                self.faces, 
+                key=lambda face: -sum([vertices[j][2] for j in face.vertices]) / face.vertices_length
+            )
             for face in self.faces:
                 cull = self.calculate_culling(camera.orientation, vertices[face.vertices]) # By fist culling we can save on Z calculations
                 if cull < 0:
