@@ -2,11 +2,15 @@ from .state import State
 from src.scripts.entities.player import Player
 from src.scripts.entities.planet import Planet
 from src.scripts.entities.entity import Entity
+from src.scripts.entities.asteroid import Asteroid
 from src.scripts.particles import SpaceParticles
 from src.scripts.controller import Controller
 
 from copy import copy
 import random
+
+import pygame
+pygame.font.init()
 
 import glm
 
@@ -44,7 +48,7 @@ class Space(State):
         self.obstacles = []
         self.controller = Controller(self, self.renderer, ScreenSize)
 
-        for x in range(10):
+        for x in range(15):
             self.planet2 = Planet(self, "src/assets/models/planet/planet.obj", "src/assets/models/planet/planet.mtl")
             x, y = random.randrange(-500, 500), random.randrange(-500, 500)
             self.planet2.position = glm.vec3(x, 0, y)
@@ -62,14 +66,35 @@ class Space(State):
         self.model_renderer.add_model(self.player)
 
         self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 100)
+        self.moving = False
+        self.acceleration = 0
 
     def update(self):
         self.controller.update()
 
         self.player.update()
-        self.camera.position.x -= glm.normalize(self.camera.orientation).x / 3
-        self.camera.position.z -= glm.normalize(self.camera.orientation).z / 3
-        self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5
+
+        if self.moving:
+            self.acceleration = min(self.acceleration + 0.1, 2)
+            self.camera.position.x -= glm.normalize(self.camera.orientation).x / 7 * self.acceleration
+            self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
+            self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
+        else:
+            self.acceleration = max(self.acceleration - 0.01, 0)
+            self.camera.position.x -= glm.normalize(self.camera.orientation).x / 7 * self.acceleration
+            self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
+            self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
+
+        if random.randrange(0, 100) == 4:
+
+            print("spawning asteroid")
+            x, y = random.randrange(15, 30), random.uniform(self.camera.position.x - 30, self.camera.position.x + 30)
+            asteroid = Asteroid(self)
+            asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.y - glm.normalize(self.camera.orientation).y * x)
+            direction = glm.normalize(asteroid.position - self.camera.position)
+            asteroid.direction = -direction / 10
+
+            self.model_renderer.add_model(asteroid)
 
         # self.player.position.x = (self.camera.position.x - self.camera.orientation.x * 2) - 1
         # self.player.position.z = (self.camera.position.z - self.camera.orientation.z * 2)
@@ -77,8 +102,6 @@ class Space(State):
         # keys = pygame.key.get_pressed()
 
         # if keys[pygame.K_d]:
-        #     self.player.rot_x += 1
-        #     self.camera.orientation = glm.rotate(self.camera.orientation, glm.radians(0.5), self.camera.up)
 
         # if keys[pygame.K_a]:
         #     self.player.rot_x -= 1
@@ -95,14 +118,14 @@ class Space(State):
         self.player.rot_x += -self.player.rot_x / 100
         self.player.rot_z += -self.player.rot_z / 100
 
-        for obstacle in self.obstacles:
-            obstacleRect = copy(obstacle.rect)
+        # for obstacle in self.obstacles:
+        #     obstacleRect = copy(obstacle.rect)
             
-            if self.player.rect.collide_rect(obstacleRect):
-                print('Player - Planet collision detected')
+        #     if self.player.rect.collide_rect(obstacleRect):
+        #         print('Player - Planet collision detected')
 
     def render(self):
-        self.map_texture.fill((100, 100, 100))
+        self.map_texture.fill((10, 10, 10))
         self.renderer.draw_color = (0, 0, 0, 255)
         self.renderer.clear()
 
@@ -126,9 +149,12 @@ class Space(State):
                 self.model_renderer.render_model(model, self.renderer, matrix)
             else:
                 self.model_renderer.render_model(model, self.renderer, self.original_matrix)
-
             if type(model) == Planet:
-                pygame.draw.circle(self.map_texture, (0, 0, 255), (model.position.x + 500, model.position.z + 500), 15)
+                if glm.distance(model.position, self.camera.position) < 30:
+                    surf = pygame.Surface((40, 40))
+                    surf.fill((0, 0, 255))
+
+                pygame.draw.circle(self.map_texture, model.type, (model.position.x + 500, model.position.z + 500), 15)
 
         # self.player.position_matrix = self.pos
         # self.player.rotation_matrix = self.rot
@@ -145,6 +171,10 @@ class Space(State):
                 pygame.mouse.set_visible(self.camera.hidden)
                 self.camera.hidden = not self.camera.hidden
 
-            if event.button == 2:
-                print(self.camera.position)
-                print(self.camera.orientation)
+            if event.button == 3:
+                self.moving = True
+
+
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 3:
+                self.moving = False

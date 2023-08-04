@@ -121,7 +121,6 @@ class Model:
     @staticmethod   
     def parse_mtl_file(mtl_file):
         materials = {}
-        print("parsing mtl")
         lines = []
         with open(mtl_file, "r") as f:
             line = ""
@@ -187,7 +186,6 @@ class Model:
     def __init__(self, obj_file, mtl_file):
         self.materials = self.parse_mtl_file(mtl_file)
         self.vertices, self.uvs, self.normals, self.faces = self.parse_obj_file(obj_file, self.materials)
-        print(self.vertices[0])
         self.vertices = np.array(self.vertices, dtype=np.double)
         self.uvs = np.array(self.uvs)
         self.normals = np.array(self.normals)
@@ -206,12 +204,12 @@ class Model:
 
     @staticmethod
     #commented for now so it's faster to debug
-    #@jit(nopython=True, fastmath=True, nogil=True)
+    @jit(nopython=True, fastmath=True, nogil=True)
     def screen(v):
         return np.column_stack((((v[:, 0] + 1) / 2) * 1000, (1 - (v[:, 1] + 1) / 2) * 800))
 
     @staticmethod
-    #@jit(nopython=True, fastmath=True, nogil=True)
+    @jit(nopython=True, fastmath=True, nogil=True)
     def three_to_two(v):
         return np.column_stack(((v[:, 0] / (v[:, 2] + 1)), (v[:, 1] / (v[:, 2] + 1))))
 
@@ -285,7 +283,7 @@ class Model:
 
         for i, vertex in enumerate(vertices):
             v = glm.vec4(vertex)
-            vertices[i] = (matrix * self.position_matrix * self.rotation_matrix * self.scale_matrix) * v
+            vertices[i] = self.scale_matrix * (matrix * self.position_matrix * self.rotation_matrix) * v
             self.average_z += vertices[i][2]
 
         self.average_z /= len(vertices)
