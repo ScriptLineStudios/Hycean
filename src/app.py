@@ -12,7 +12,7 @@ class App:
         self.ScreenSize = (1000, 800)
         caption = 'Hycean'
         
-        self.window = pygame._sdl2.Window(caption, self.ScreenSize)
+        self.window = pygame._sdl2.Window(caption, self.ScreenSize, opengl=True)
         self.renderer = pygame._sdl2.Renderer(self.window)
 
         self.states = {
