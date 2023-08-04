@@ -5,6 +5,7 @@ from src.scripts.entities.entity import Entity
 from src.scripts.entities.asteroid import Asteroid
 from src.scripts.particles import SpaceParticles
 from src.scripts.controller import Controller
+from src.scripts.land_indicator import LandIndicator
 
 from copy import copy
 import random
@@ -66,6 +67,8 @@ class Space(State):
 
         self.model_renderer.add_model(self.player)
 
+        self.LandIndicator = LandIndicator(self.renderer, ScreenSize)
+
         self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 100)
         self.moving = False
         self.acceleration = 0
@@ -73,16 +76,24 @@ class Space(State):
     def update(self):
         self.controller.update()
 
-        self.player.update()
-
         if self.moving:
             self.acceleration = min(self.acceleration + 0.1, 2)
         else:
             self.acceleration = max(self.acceleration - 0.01, 0)
 
+
+        playerPos = copy(self.camera.position)
+        playerPos.x += glm.normalize(self.camera.orientation).x / 7 * self.acceleration
+        playerPos.z += glm.normalize(self.camera.orientation).z / 7 * self.acceleration
+        playerPos.y += glm.normalize(self.camera.orientation).y / 5 * self.acceleration
+
+        self.player.update(playerPos)
+
+
         self.camera.position.x -= glm.normalize(self.camera.orientation).x / 7 * self.acceleration
         self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
         self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
+
 
         if random.randrange(0, 400) == 4:
             x, y = random.randrange(15, 30), 0
@@ -96,11 +107,20 @@ class Space(State):
         self.player.rot_x += -self.player.rot_x / 50
         self.player.rot_z += -self.player.rot_z / 50
 
-        # for obstacle in self.obstacles:
-        #     obstacleRect = copy(obstacle.rect)
+        self.LandIndicator.planet = None
+        for obstacle in self.obstacles:
+            # todo: add a check whether the obstacle is a planet
+
+            obstacleRect = copy(obstacle.rect)
             
-        #     if self.player.rect.collide_rect(obstacleRect):
-        #         print('Player - Planet collision detected')
+            if self.player.rect.collide_rect(obstacleRect):
+                diffVec = pygame.Vector3(self.player.rect.position) - obstacleRect.center
+                distance = diffVec.length()
+
+                self.LandIndicator.update_planet(obstacle, distance)
+                #print(distance)
+
+        
 
     def render(self):
         self.map_texture.fill((10, 10, 10))
@@ -138,6 +158,8 @@ class Space(State):
                     surf.fill((0, 0, 255))
 
                 pygame.draw.circle(self.map_texture, model.type, (model.position.x + 500, model.position.z + 500), 15)
+
+        self.LandIndicator.draw()
 
         # self.player.position_matrix = self.pos
         # self.player.rotation_matrix = self.rot

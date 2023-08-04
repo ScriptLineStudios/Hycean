@@ -29,8 +29,8 @@ class Player(Entity):
             flame = pygame.transform.flip(flame, False, True)
             self.flames[i] = pygame._sdl2.Texture.from_surface(self.scene.renderer, flame)
 
-    def update(self):
-        self.rect.position = self.position
+    def update(self, RectPosition):
+        self.rect.position = RectPosition
 
     def render(self, *args, **kwargs):
         self.rotation_matrix = glm.mat4()

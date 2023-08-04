@@ -50,11 +50,22 @@ class Planet(Entity):
                 face.material["color"] = self.data["land_color"]
         
         self.origin_rect = Rect3.from_vertices(self.vertices)
+        
+        ScaleRect = 35
+        self.origin_rect.width += ScaleRect
+        self.origin_rect.height += ScaleRect
+        self.origin_rect.depth += ScaleRect
+        self.origin_rect.x -= ScaleRect * 0.5
+        self.origin_rect.y -= ScaleRect * 0.5
+        self.origin_rect.z -= ScaleRect * 0.5
+
         self.rect = copy(self.origin_rect)
         #doing this so on the first frame collision doesn't get detected
         self.rect.position = (1000, 1000, 1000)
 
     def render(self, *args, **kwargs):
         super().render(*args, **kwargs)
-        self.degree+=0.2
+        self.degree += 0.2
+
         self.rect.position = (self.origin_rect.position + self.position)
+        self.rect.size = self.origin_rect.size

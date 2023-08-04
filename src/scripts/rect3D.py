@@ -91,6 +91,15 @@ class Rect3:
         self._position = [value[0], value[1], value[2]]
 
     @property
+    def center(self):
+        center = [
+            self._x + self.width / 2,
+            self._y + self.height / 2,
+            self._z + self.depth / 2
+        ]
+        return center
+
+    @property
     def x(self):
         return self._x
 
@@ -192,13 +201,15 @@ class Rect3:
 
     
     def draw_debug(self, camera):
-        #*imagine here drawing faces (for debug)*
+        #*imagine here drawing faces (for debug)*💀
         # (could be done outside the rect3 class)
         ...
     
 
     def update_size(self, width, height, depth):
         self.size = (width, height, depth)
+
+        self.update_vertices(self._x, self._y, self._z, width, height, depth)
 
     def update_vertices(self, x, y, z, width, height, depth):
         self.vertices = [
