@@ -10,6 +10,7 @@ from src.scripts.land_indicator import LandIndicator
 from copy import copy
 import random
 
+
 import pygame
 pygame.font.init()
 
@@ -95,7 +96,7 @@ class Space(State):
         self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
 
 
-        if random.randrange(0, 400) == 4:
+        if random.randrange(0, 300) == 4:
             x, y = random.randrange(15, 30), 0
             asteroid = Asteroid(self)
             asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.z - glm.normalize(self.camera.orientation).z * x)
@@ -118,10 +119,7 @@ class Space(State):
                 distance = diffVec.length()
 
                 self.LandIndicator.update_planet(obstacle, distance)
-                #print(distance)
-
-        
-
+                
     def render(self):
         self.map_texture.fill((10, 10, 10))
         self.renderer.draw_color = (0, 0, 0, 255)

@@ -10,25 +10,26 @@ pygame.init()
 class App:
     def __init__(self):
         self.ScreenSize = (1000, 800)
-        caption = 'Hycean'
+        caption = 'Hycean - Space'
         
-        self.window = pygame._sdl2.Window(caption, self.ScreenSize, opengl=True)
+        self.window = pygame._sdl2.Window(caption, self.ScreenSize, borderless=False)
         self.renderer = pygame._sdl2.Renderer(self.window)
+        # self.window.hide()
 
         self.states = {
             #'main_menu': Menu()
             'space': Space(self.renderer),
-            'ocean': Ocean(self.renderer),
+            'ocean': Ocean(None),
         }
 
-        self.crnt_state = 'ocean'
+        self.crnt_state = 'space'
         self.state = self.states[self.crnt_state]
 
         self.clock = pygame.time.Clock()
         self.fps = 60
 
     def run(self):
-        renderer = self.renderer
+        renderer = self.state.renderer
         while True:
             self.clock.tick(self.fps)
 
@@ -45,4 +46,8 @@ class App:
             self.state.render()
 
             renderer.present()
-            self.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'
+            try:
+                self.state.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      
+            except:
+                self.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      
+                

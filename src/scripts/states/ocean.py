@@ -33,10 +33,24 @@ class Eel(Enemy):
         shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, pygame_shaders.DEFAULT_FRAGMENT_SHADER, self.image)
         self.speed = 0.5
         super().__init__(scene, position, shader)
+        self.reverse = 1
+        self.timeout = 0
 
     def update(self):
         direction = (self.position - self.scene.player.position).normalize()
-        self.position -= direction * self.speed
+
+        rect = pygame.Rect(*(self.position), 32, 16)
+        if rect.colliderect(self.scene.player.rect):
+            self.scene.player.take_damage(5)
+            self.reverse = -1
+            self.timeout = 50
+
+        if self.timeout > 0:
+            self.timeout -= 1
+        else:
+            self.reverse = 1
+
+        self.position -= self.reverse * direction * self.speed
 
         super().update()
 
@@ -98,12 +112,23 @@ class Particle:
 class Player:
     def __init__(self, scene):
         self.scene = scene
-        self.player_img = pygame.image.load("src/assets/player.png")
+        self.player_img = pygame.Surface((32, 32), pygame.SRCALPHA)
+        img = pygame.image.load("src/assets/player.png")
+        self.player_img.blit(img, (0, 0))
 
         self.rect = pygame.Rect(250, 200, 32, 32)
         self.flipped = False
 
         self.cached_particle_surfaces = {}
+
+        self.health = 100
+        self.max_health = 100
+
+    def take_damage(self, amount):
+        self.health -= amount
+        self.player_img.fill((255, 255, 255))
+        self.scene.screen_shake += 10
+        self.scene.splash_speed += 0.002
 
     @property
     def position(self):
@@ -143,6 +168,11 @@ class Ocean(State):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.player = Player(self)
+
+        self.window = pygame._sdl2.Window("Hycean - Ocean", (1000, 800), opengl=True, borderless=False)
+        self.renderer = pygame._sdl2.Renderer(self.window)
+        print(self.renderer.get_viewport())
+        self.window.show()
 
         self.colors = {
             "blue": (0, 27, 63, 255),
@@ -212,8 +242,6 @@ class Ocean(State):
         self.screen_shader.send("speed", self.splash_speed)
 
         self.splash_speed = max(self.splash_speed - 0.0001, 0.003)
-        print(self.splash_speed)
-
         self.water_shader.send("time", self.time)
 
         self.player.render()
@@ -227,6 +255,10 @@ class Ocean(State):
             self.screen_shake -= 1
             
         self.screen_shader.render_direct(pygame.Rect(dx, dy, 1000, 800))
+
+        pygame.draw.rect(self.surface, (255, 0, 0), (250 - (self.player.max_health / 2), 20, self.player.health, 20))
+        pygame.draw.rect(self.surface, (0, 0, 0), (250 - (self.player.max_health / 2), 20, self.player.max_health, 20), 3)
+
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, pygame.transform.flip(self.surface, False, True)), pygame.Rect(dx, dy, 1000, 800))
 
     def handle_event(self, event):
