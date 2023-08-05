@@ -16,17 +16,11 @@ class App:
         self.window = pygame._sdl2.Window(caption, self.ScreenSize, borderless=False, opengl=False)
         self.renderer = pygame._sdl2.Renderer(self.window)
 
-        self.display = pygame.display.set_mode((1000, 800))
-
         self.states = {
             #'main_menu': Menu()
             'space': Space(self, self.renderer),
-<<<<<<< HEAD
-            'ocean': Ocean(self, None ),
-=======
-            #'ocean': Ocean(self, self.renderer),
+            'ocean': Ocean(self, self.renderer),
             'game_over': GameOver(self, self.renderer)
->>>>>>> ca87a26b08a63f38d3a55bc40fffc026b365d308
         }
 
         self.crnt_state = 'space'
@@ -38,13 +32,10 @@ class App:
         #self.state = self.states[self.crnt_state]
         #self.state.start()
         
-<<<<<<< HEAD
-=======
         #self.crnt_state = 'ocean'
         #self.state = self.states[self.crnt_state]
         #self.state.start()
 
->>>>>>> ca87a26b08a63f38d3a55bc40fffc026b365d308
         self.clock = pygame.time.Clock()
         self.fps = 60
 
@@ -66,17 +57,13 @@ class App:
                         self.state = self.states[self.crnt_state]
                         self.state.update_screen()
 
-            if self.crnt_state == "space":
-                renderer.draw_color = (255, 255, 255, 255)
-                renderer.clear()
+            renderer.draw_color = (255, 255, 255, 255)
+            renderer.clear()
 
             self.state.render()
 
-            if self.crnt_state == "space":
-                renderer.present()
-                try:
-                    self.state.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      
-                except:
-                    self.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      
-            else:
-                pygame.display.flip()
+            renderer.present()
+            try:
+                self.state.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      
+            except:
+                self.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      

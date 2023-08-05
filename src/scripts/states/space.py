@@ -29,7 +29,7 @@ class Space(State):
         ScreenSize = (1000, 800)
 
         self.music = pygame.mixer.music.load("src/assets/sound/ambientspacemusic.mp3")
-        pygame.mixer.music.play(-1)
+        # pygame.mixer.music.play(-1)
 
         self.engine_sound = pygame.mixer.Sound("src/assets/sound/engine.wav")
         self.engine_sound.set_volume(0.4)
@@ -140,6 +140,7 @@ class Space(State):
                     self.GameOverSwitch(obstacle)
 
     def GameOverSwitch(self, obstacle):
+        print("switched")
         app = self.app
         app.crnt_state = 'game_over'
         app.state = app.states[app.crnt_state]
@@ -155,8 +156,6 @@ class Space(State):
         pygame.draw.line(self.map_texture, (150, 200, 255), (self.camera.position.x + 500, self.camera.position.z + 500), 
         (self.camera.position.x + 500 - self.camera.orientation.x * 100, self.camera.position.z + 500 - self.camera.orientation.z * 100), 5)
 
-        #self.renderer.blit(self.background_image, pygame.Rect(0, 0, 1000, 800))
-
         self.last_orientation = glm.vec3(self.camera.orientation.x, self.camera.orientation.y, self.camera.orientation.z) 
         matrix = self.model_renderer.update_camera()
         if self.original_matrix is None:
@@ -164,7 +163,6 @@ class Space(State):
 
         self.model_renderer.sort_models()
         self.Stars.render(matrix, self.camera)
-        # self.SpaceParticles.render(matrix, self.camera)
 
         for model in self.model_renderer.models:
             if type(model) != Player:
@@ -185,9 +183,6 @@ class Space(State):
                 pygame.draw.circle(self.map_texture, model.type, (model.position.x + 500, model.position.z + 500), 15)
 
         self.LandIndicator.draw()
-
-        # self.player.position_matrix = self.pos
-        # self.player.rotation_matrix = self.rot
 
         text = self.font.render(f"x: {int(self.camera.position.x)} y: {int(self.camera.position.y)} z: {int(self.camera.position.z)}", False, (255, 255, 255))
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), pygame.Rect(0, 210, text.get_width(), text.get_height()))
