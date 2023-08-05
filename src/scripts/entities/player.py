@@ -42,7 +42,7 @@ class Player(Entity):
         super().render(*args, **kwargs, use_rotate=False, always_draw=True)
         # self.scene.renderer.blit(self.flames[0], pygame.Rect(460, 550, 64, 64), angle=-self.rot_x / 100)
         if self.scene.moving:
-            self.flames[self.flame_id // 7].draw(None, pygame.Rect(460, 550, 64, 64), angle=self.rot_x)
+            # self.flames[self.flame_id // 7].draw(None, pygame.Rect(460, 550, 64, 64), angle=self.rot_x)
             self.flame_id += 1
             if self.flame_id > len(self.flames) * 7 - 1:
                 self.flame_id = 0

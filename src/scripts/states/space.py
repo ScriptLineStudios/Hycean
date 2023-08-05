@@ -82,7 +82,6 @@ class Space(State):
         else:
             self.acceleration = max(self.acceleration - 0.01, 0)
 
-
         playerPos = copy(self.camera.position)
         playerPos.x += glm.normalize(self.camera.orientation).x / 7 * self.acceleration
         playerPos.z += glm.normalize(self.camera.orientation).z / 7 * self.acceleration
@@ -90,11 +89,9 @@ class Space(State):
 
         self.player.update(playerPos)
 
-
         self.camera.position.x -= glm.normalize(self.camera.orientation).x / 7 * self.acceleration
         self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
         self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
-
 
         if random.randrange(0, 300) == 4:
             x, y = random.randrange(15, 30), 0

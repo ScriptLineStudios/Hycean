@@ -287,7 +287,7 @@ class Ocean(State):
 
         self.screen_shake = 0
 
-        self.color = "blue"
+        self.color = "red"
 
         self.surface = pygame.Surface((500, 400))
         self.particles = []

@@ -14,7 +14,7 @@ class App:
         
         self.window = pygame._sdl2.Window(caption, self.ScreenSize, borderless=False)
         self.renderer = pygame._sdl2.Renderer(self.window)
-        self.window.hide()
+        # self.window.hide()
 
         self.states = {
             #'main_menu': Menu()
@@ -22,7 +22,7 @@ class App:
             'ocean': Ocean(None),
         }
 
-        self.crnt_state = 'ocean'
+        self.crnt_state = 'space'
         self.state = self.states[self.crnt_state]
 
         self.clock = pygame.time.Clock()
