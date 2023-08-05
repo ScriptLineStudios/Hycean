@@ -30,7 +30,6 @@ class Sprite:
 
 
 class Stars:
-    @staticmethod
     def __init__(self, ScreenSize, renderer, starCount):
         self.stars = []
         
@@ -42,7 +41,8 @@ class Stars:
         )
         
         # origin = (0, 0, 0)
-        distance = 1
+        self.vertices = []
+        distance = 10000
         for starN in range(starCount):
             direction = glm.vec3(
                 cos(uniform(0.00, 6.28)) * distance,
@@ -82,11 +82,10 @@ class Stars:
         self.rotation_matrix = glm.mat4()
 
         for i, vertex in enumerate(vertices):
-            v = glm.vec4(self.original_vertices[i])
+            v = glm.vec3(
+                self.original_vertices[i]
+            )
             vertices[i] = self.scale_matrix * (matrix * self.position_matrix * self.rotation_matrix) * v
-            self.average_z += vertices[i][2]
-
-        self.average_z /= len(vertices)
 
         screen_vertices = self.screen(self.three_to_two(vertices))
         

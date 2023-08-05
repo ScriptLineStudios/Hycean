@@ -5,7 +5,7 @@ from string import ascii_letters
 
 import pygame
 from pygame.locals import KEYDOWN, K_r, K_SPACE, K_KP_ENTER
-from pygame._sdl2 import Texture
+from pygame._sdl2 import Texture, Image
 pygame.font.init()
 
 
@@ -25,7 +25,7 @@ class GameOver(State):
             False, (255, 0, 0)
         )
         self.restartText = self.to_texture(self.restartText)
-        self.restartRect = self.restartText.get_rect(center = (500, 550))
+        self.restartRect = self.restartText.get_rect(center = (500, 650))
         
         self.restart = False
         self.RestartAnim = False
@@ -33,11 +33,6 @@ class GameOver(State):
         self.maxScale = 1.2
         self.speed = 0.05
 
-        self.black_screen = self.to_texture(pygame.Surface((1000, 800)))
-        self.opacityAnim = False 
-        self.opacity = 0
-        self.alphaSpeed = 5
-        self.maxAlpha = 255
 
         self.update_screen()
 
@@ -55,13 +50,9 @@ class GameOver(State):
         else:
             if self.scale > 1:
                 self.scale -= self.speed
-
-        if self.opacityAnim:
-            if self.opacity > self.maxAlpha:
-                self.opacity += self.alphaSpeed
             else:
-                self.restart = True
-                print('change state to space on main')
+                if self.restart:
+                    self.restart_space()
 
         scaledRestart = self.restartRect.copy()
         scaledRestart.width *= self.scale
@@ -69,16 +60,22 @@ class GameOver(State):
         scaledRestart.center = self.restartRect.center
 
         self.restartText.draw(srcrect=None, dstrect=scaledRestart)
-        
-        #self.black_screen.alpha = self.opacity
-        #self.black_screen.draw()
-    
+
+    def restart_space(self):
+        # RESTART SPACE STATE
+        app = self.app
+        app.crnt_state = 'space'
+        app.state = app.states[app.crnt_state]
+
+        #app.state.restart()
+
     def to_texture(self, surface):
         return Texture.from_surface(
             self.renderer, surface
         )
 
     def update_screen(self):
+        # RESTARTS RESTART SCREEN
         self.surface = self.renderer.to_surface()
         self.surface = pygame.transform.gaussian_blur(self.surface, 4)
         self.surface = pygame.transform.grayscale(self.surface)
@@ -95,12 +92,12 @@ class GameOver(State):
         self.scale = 1.0
         self.maxScale = 1.2
         self.speed = 0.05
-        
-        self.opacity = 0
-        self.alphaSpeed = 5
-        self.maxAlpha = 255
+
+        self.restart = False
 
     def handle_event(self, event):
         if event.type == KEYDOWN:
             if event.key in [K_r, K_SPACE, K_KP_ENTER]:
+                # - play sound here
                 self.RestartAnim = True
+                self.restart = True
