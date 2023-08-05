@@ -16,12 +16,13 @@ class App:
         self.renderer = pygame._sdl2.Renderer(self.window)
 
         self.states = {
-            #'main_menu': Menu()
+            #'main_menu': Menu(),
             'space': Space(self.renderer),
             'ocean': Ocean(self.renderer),
+            'game_over': GameOver(self.renderer)
         }
 
-        self.crnt_state = 'ocean'
+        self.crnt_state = 'space'
         self.state = self.states[self.crnt_state]
 
         self.clock = pygame.time.Clock()
@@ -38,6 +39,13 @@ class App:
                 if event.type == QUIT:
                     pygame.quit()
                     raise SystemExit
+
+                #DEBUG
+                if event.type == KEYDOWN:
+                    if event.key == K_SPACE:
+                        self.crnt_state = 'game_over'
+                        self.state = self.states[self.crnt_state]
+                        self.state.update_screen()
 
             renderer.draw_color = (255, 255, 255, 255)
             renderer.clear()

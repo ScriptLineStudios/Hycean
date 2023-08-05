@@ -73,6 +73,8 @@ class Space(State):
         self.moving = False
         self.acceleration = 0
 
+        self.game_over = False
+
     def update(self):
         self.controller.update()
 
@@ -83,12 +85,11 @@ class Space(State):
 
 
         playerPos = copy(self.camera.position)
-        playerPos.x += glm.normalize(self.camera.orientation).x / 7 * self.acceleration
-        playerPos.z += glm.normalize(self.camera.orientation).z / 7 * self.acceleration
-        playerPos.y += glm.normalize(self.camera.orientation).y / 5 * self.acceleration
+        playerPos.x -= glm.normalize(self.camera.orientation).x * 1.5
+        playerPos.z -= glm.normalize(self.camera.orientation).z * 1.5
+        playerPos.y -= glm.normalize(self.camera.orientation).y * 1
 
         self.player.update(playerPos)
-
 
         self.camera.position.x -= glm.normalize(self.camera.orientation).x / 7 * self.acceleration
         self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
@@ -102,6 +103,7 @@ class Space(State):
             direction = glm.normalize(asteroid.position - self.camera.position)
             asteroid.direction = -direction / 10
 
+            self.obstacles.append(asteroid)
             self.model_renderer.add_model(asteroid)
 
         self.player.rot_x += -self.player.rot_x / 50
@@ -109,16 +111,22 @@ class Space(State):
 
         self.LandIndicator.planet = None
         for obstacle in self.obstacles:
-            # todo: add a check whether the obstacle is a planet
+            if type(obstacle) == Planet:
+                obstacleRect = copy(obstacle.rect)
+                
+                if self.player.rect.collide_rect(obstacleRect):
+                    diffVec = pygame.Vector3(self.player.rect.position) - obstacleRect.center
+                    distance = diffVec.length()
 
-            obstacleRect = copy(obstacle.rect)
-            
-            if self.player.rect.collide_rect(obstacleRect):
-                diffVec = pygame.Vector3(self.player.rect.position) - obstacleRect.center
+                    self.LandIndicator.update_planet(obstacle, distance)
+
+            if type(obstacle) == Asteroid:
+                obstacleRect = copy(obstacle.rect)
+                diffVec = pygame.Vector3(self.player.rect.center) - obstacleRect.center
                 distance = diffVec.length()
 
-                self.LandIndicator.update_planet(obstacle, distance)
-                #print(distance)
+                if distance < 2.5:
+                    print('collision')
 
         
 
@@ -170,6 +178,10 @@ class Space(State):
 
     def handle_event(self, event):
         self.controller.handle_event(event)
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                self.game_over = True
         
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
@@ -179,7 +191,6 @@ class Space(State):
 
             if event.button == 3:
                 self.moving = True
-
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 3:
