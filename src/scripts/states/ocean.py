@@ -25,9 +25,36 @@ class Enemy:
         self.position = position
         self.shader = shader
         self.images = images
+        self.originals = self.images.copy()
         self.index = 0
+        self.health = 50
+        self.cooldown = 0
+        self.direction = pygame.Vector2(0, 0)
+
+    @staticmethod
+    #Kindly borrowed from https://github.com/pygame-community/pygame-ce/issues/1847#issuecomment-1445321115
+    def solid_overlay(surf, overlay_color=(255, 255, 255)):
+        return pygame.mask.from_surface(surf).to_surface(setcolor=overlay_color,
+                                                 unsetcolor=(0, 0, 0, 0))
+
+    def take_damage(self, damage, missile):
+        self.health -= damage
+        sx, sy = self.images[self.index // 8].get_size()
+        for x in range(20):
+            subsurf = self.images[self.index // 8].subsurface(random.randrange(0, sx - 5), random.randrange(0, sy - 5), 4, 4)
+            self.scene.particles.append(Particle(self.scene, self.position.copy(), pygame.Vector2(missile.direction.x + random.normalvariate(0, 0.7), missile.direction.y + random.normalvariate(0, 0.7)), subsurf))
+        self.cooldown = 4
+        for i, image in enumerate(self.images):
+            self.images[i] = self.solid_overlay(image)
+        self.direction = missile.direction
 
     def update(self):
+        if self.cooldown > 0:
+            self.position += self.direction * 10
+            self.cooldown -= 1
+            if self.cooldown == 1:
+                for i, image in enumerate(self.images):
+                    self.images[i] = self.originals[i]
         self.index += 1
         if self.index > len(self.images) * 8 - 1: 
             self.index = 0
@@ -45,6 +72,7 @@ class Anglerfish(Enemy):
         self.images = [pygame.image.load("src/assets/anglerfish1.png"), pygame.image.load("src/assets/anglerfish2.png"), pygame.image.load("src/assets/anglerfish3.png")]
         self.index = 0
         super().__init__(scene, position, shader, self.images)
+
 
     def update(self):
         direction = (self.position - self.scene.player.position).normalize()
@@ -146,8 +174,10 @@ class Particle:
         self.position = position
         self.veclocity = veclocity
         self.surface = surface
+        self.lifetime = 100
 
     def update(self):
+        self.lifetime -= 1
         self.position += self.veclocity
         self.scene.surface.blit(self.surface, self.position - self.scene.camera)
 
@@ -232,8 +262,11 @@ class Player:
 
             self.scene.particles.append(Particle(self.scene, pygame.Vector2(self.rect.x + 32 * int(self.flipped), self.rect.y + 16), (0, -2), s))
 
-        self.scene.surface.blit(pygame.transform.flip(self.player_img, self.flipped, False), (self.rect.x - self.scene.camera.x, self.rect.y - self.scene.camera.y))
+        self.scene.surface.blit(pygame.transform.flip(
+            pygame.transform.scale(self.player_img, (self.player_img.get_width() - abs(self.acceleration.y)*4, self.player_img.get_height() - abs(self.acceleration.x)*4)), 
+            self.flipped, False), (self.rect.x - self.scene.camera.x, self.rect.y - self.scene.camera.y))
         self.moving = False
+
 class Ocean(State):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -309,13 +342,21 @@ class Ocean(State):
         mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
         pygame.draw.circle(self.surface, (255, 0, 0), mp, 3)
 
-        for missile in self.missiles:
-            missile.update()
 
         for particle in self.particles:
-            particle.update()
+            if particle.lifetime > 0:
+                particle.update()
+            else:
+                self.particles.remove(particle)
 
         for enemy in self.enemies:
+            for missile in self.missiles:
+                missile.update()
+                rect = pygame.Rect(missile.position.x, missile.position.y, 16, 16)
+                enemy_rect = pygame.Rect(enemy.position.x, enemy.position.y, 16, 16)
+                if rect.colliderect(enemy_rect):
+                    enemy.take_damage(15, missile)
+                    self.missiles.remove(missile)
             enemy.update()
 
         self.screen_shader.send("time", self.time)
