@@ -6,6 +6,7 @@ from src.scripts.entities.asteroid import Asteroid
 from src.scripts.particles import SpaceParticles
 from src.scripts.controller import Controller
 import math
+import time
 
 import pygame_shaders
 
@@ -13,18 +14,55 @@ from copy import copy
 import random
 
 import opensimplex
+opensimplex.seed(int(time.time()))
 
 import pygame
 pygame.font.init()
 
 class Enemy:
-    def __init__(self, scene, position, shader):
+    def __init__(self, scene, position, shader, images):
         self.scene = scene
         self.position = position
         self.shader = shader
+        self.images = images
+        self.index = 0
 
     def update(self):
-        self.scene.surface.blit(pygame.transform.flip(self.image, bool(self.position.x < self.scene.player.position.x), False), self.position - self.scene.camera)
+        self.index += 1
+        if self.index > len(self.images) * 8 - 1: 
+            self.index = 0
+        self.scene.surface.blit(pygame.transform.flip(self.images[self.index // 8], bool(self.position.x < self.scene.player.position.x), False), self.position - self.scene.camera)
+
+class Anglerfish(Enemy):
+    def __init__(self, scene, position):
+        self.image = pygame.image.load("src/assets/anglerfish.png")
+
+        shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, pygame_shaders.DEFAULT_FRAGMENT_SHADER, self.image)
+        self.speed = 0.8
+        self.reverse = 1
+        self.timeout = 0
+
+        self.images = [pygame.image.load("src/assets/anglerfish1.png"), pygame.image.load("src/assets/anglerfish2.png"), pygame.image.load("src/assets/anglerfish3.png")]
+        self.index = 0
+        super().__init__(scene, position, shader, self.images)
+
+    def update(self):
+        direction = (self.position - self.scene.player.position).normalize()
+        rect = pygame.Rect(*(self.position), 32, 16)
+        if self.reverse == 1:
+            if rect.colliderect(self.scene.player.rect):
+                self.scene.player.take_damage(5)
+                self.reverse = -1
+                self.timeout = 50
+
+        if self.timeout > 0:
+            self.timeout -= 1
+        else:
+            self.reverse = 1
+
+        self.position -= self.reverse * direction * self.speed
+
+        super().update()
 
 class Eel(Enemy):
     def __init__(self, scene, position):
@@ -32,18 +70,22 @@ class Eel(Enemy):
 
         shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, pygame_shaders.DEFAULT_FRAGMENT_SHADER, self.image)
         self.speed = 0.5
-        super().__init__(scene, position, shader)
         self.reverse = 1
         self.timeout = 0
+
+        self.images = [pygame.image.load("src/assets/eel-sheet1.png"), pygame.image.load("src/assets/eel-sheet2.png"), pygame.image.load("src/assets/eel-sheet3.png")]
+        self.index = 0
+        super().__init__(scene, position, shader, self.images)
 
     def update(self):
         direction = (self.position - self.scene.player.position).normalize()
 
         rect = pygame.Rect(*(self.position), 32, 16)
-        if rect.colliderect(self.scene.player.rect):
-            self.scene.player.take_damage(5)
-            self.reverse = -1
-            self.timeout = 50
+        if self.reverse == 1:
+            if rect.colliderect(self.scene.player.rect):
+                self.scene.player.take_damage(5)
+                self.reverse = -1
+                self.timeout = 50
 
         if self.timeout > 0:
             self.timeout -= 1
@@ -69,7 +111,7 @@ class Missle:
         if (size, size) not in self.cached_particle_surfaces.keys():
             surf = pygame.Surface((size, size))
             surf.set_colorkey((0, 0, 0))
-            pygame.draw.circle(surf, (0, 0, 255), (size / 2, size / 2), size / 2, 2)
+            pygame.draw.circle(surf, (162, 220, 199), (size / 2, size / 2), size / 2, 2)
             self.cached_particle_surfaces[(size, size)] = surf
 
         s = self.cached_particle_surfaces[(size, size)] 
@@ -115,20 +157,33 @@ class Player:
         self.player_img = pygame.Surface((32, 32), pygame.SRCALPHA)
         img = pygame.image.load("src/assets/player.png")
         self.player_img.blit(img, (0, 0))
+        self.original = self.player_img.copy()
 
-        self.rect = pygame.Rect(250, 200, 32, 32)
+        self.rect = pygame.FRect(250, 200, 32, 32)
         self.flipped = False
 
         self.cached_particle_surfaces = {}
 
         self.health = 100
         self.max_health = 100
+        self.damage = 0
+        self.moving = False
+
+        self.acceleration = pygame.Vector2(0, 0)
+
+    @staticmethod
+    #Kindly borrowed from https://github.com/pygame-community/pygame-ce/issues/1847#issuecomment-1445321115
+    def solid_overlay(surf, overlay_color=(255, 255, 255)):
+        return pygame.mask.from_surface(surf).to_surface(setcolor=overlay_color,
+                                                 unsetcolor=(0, 0, 0, 0))
 
     def take_damage(self, amount):
         self.health -= amount
-        self.player_img.fill((255, 255, 255))
         self.scene.screen_shake += 10
-        self.scene.splash_speed += 0.002
+        self.player_img = self.solid_overlay(self.player_img)
+
+        self.scene.splash_speed += 0.01
+        self.damage = 5
 
     @property
     def position(self):
@@ -138,32 +193,47 @@ class Player:
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_d]:
-            self.rect.x += 1
+            self.acceleration.x += 0.4
             self.flipped = False
+            self.moving = True
         if keys[pygame.K_a]:
-            self.rect.x -= 1
+            self.acceleration.x -= 0.4
             self.flipped = True
+            self.moving = True
 
         if keys[pygame.K_s]:
-            self.rect.y += 1
+            self.acceleration.y += 0.4
         if keys[pygame.K_w]:
-            self.rect.y -= 1
+            self.acceleration.y -= 0.4
+
+        self.rect.x += self.acceleration.x
+        self.rect.y += self.acceleration.y
+        self.acceleration.x += -self.acceleration.x / 100
+        self.acceleration.y += -self.acceleration.y / 100
+
+        self.acceleration.x = pygame.math.clamp(self.acceleration.x, -1.3, 1.3)
+        self.acceleration.y = pygame.math.clamp(self.acceleration.y, -1.3, 1.3)
 
     def render(self):
-        if random.randrange(0, 10) == 1:
+        if self.damage > 0:
+            self.damage -= 1
+            if self.damage == 1:
+                self.player_img = self.original
+
+        if random.randrange(0, 10) == 1 and self.moving:
             size = random.randrange(6, 15)
             if (size, size) not in self.cached_particle_surfaces.keys():
                 surf = pygame.Surface((size, size))
                 surf.set_colorkey((0, 0, 0))
-                pygame.draw.circle(surf, (0, 0, 255), (size / 2, size / 2), size / 2, 2)
+                pygame.draw.circle(surf, (162, 220, 199), (size / 2, size / 2), size / 2, 2)
                 self.cached_particle_surfaces[(size, size)] = surf
 
             s = self.cached_particle_surfaces[(size, size)] 
 
-            self.scene.particles.append(Particle(self.scene, pygame.Vector2(self.rect.x + 32 * int(self.flipped), self.rect.y + 16), (0, -1), s))
+            self.scene.particles.append(Particle(self.scene, pygame.Vector2(self.rect.x + 32 * int(self.flipped), self.rect.y + 16), (0, -2), s))
 
         self.scene.surface.blit(pygame.transform.flip(self.player_img, self.flipped, False), (self.rect.x - self.scene.camera.x, self.rect.y - self.scene.camera.y))
-
+        self.moving = False
 class Ocean(State):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -204,17 +274,20 @@ class Ocean(State):
         self.water_surface.fill((255, 0, 0))
         self.water_shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, "src/assets/shaders/water.glsl", self.water_surface)
 
-        self.enemies = [Eel(self, pygame.Vector2(10, 10))]
+        self.enemies = [Anglerfish(self, pygame.Vector2(10, 10))]
 
-        blocks = []
-        for x in range(32):
-            for y in range(32):
-                val = opensimplex.noise2(x / 32, y / 32)
+        self.generate_chunks()
 
-                if val < -0.4:
-                    blocks.append(Tile(self, self.rock, pygame.Vector2(x * 32, y * 32)))   
-
-        self.chunks[(0, 0)] = blocks 
+    def generate_chunks(self):
+        for chunk_x in range(-8, 8):
+            for chunk_y in range(-8, 8):
+                chunk = []
+                for x in range(16):
+                    for y in range(16):
+                        col = opensimplex.noise2((x + chunk_x * 16) / 20, (y + chunk_y * 16) / 20)
+                        if col > 0.3:
+                            chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
+                self.chunks[(chunk_x, chunk_y)] = chunk
 
     def update(self):
         self.player.update()
@@ -226,8 +299,15 @@ class Ocean(State):
 
         self.camera += (pygame.Vector2(self.player.rect.x, self.player.rect.y) - self.camera - pygame.Vector2(250, 200)) / 5
 
-        for block in self.chunks[(0, 0)]:
-            block.update()
+        cx, cy = self.player.position // 16 // 16
+        for x in range(-2, 2):
+            for y in range(-2, 2):
+                for block in self.chunks[(cx + x, cy + y)]:
+                    if block.position.distance_to(self.player.position) < 300:
+                        block.update()
+
+        mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
+        pygame.draw.circle(self.surface, (255, 0, 0), mp, 3)
 
         for missile in self.missiles:
             missile.update()
@@ -262,12 +342,13 @@ class Ocean(State):
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, pygame.transform.flip(self.surface, False, True)), pygame.Rect(dx, dy, 1000, 800))
 
     def handle_event(self, event):
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
-                player = pygame.Vector2(self.player.rect.x, self.player.rect.y)
+                player = pygame.Vector2(self.player.rect.x - self.camera.x, self.player.rect.y - self.camera.y)
                 direction = (mp - player)
-                self.missiles.append(Missle(self, player, direction.normalize(), math.atan2(direction.y, direction.x)))
+                self.missiles.append(Missle(self, player + self.camera, direction.normalize(), math.atan2(direction.y, direction.x)))
                 self.screen_shake = 50
                 self.time += 0.5
                 self.splash_speed += 0.009
