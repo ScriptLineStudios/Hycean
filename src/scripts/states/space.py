@@ -79,7 +79,7 @@ class Space(State):
 
         self.LandIndicator = LandIndicator(self.renderer, ScreenSize)
 
-        self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 100)
+        self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 200)
         self.Stars = Stars(ScreenSize, self.renderer, 100)
         self.moving = False
         self.acceleration = 0
@@ -155,7 +155,7 @@ class Space(State):
         pygame.draw.line(self.map_texture, (150, 200, 255), (self.camera.position.x + 500, self.camera.position.z + 500), 
         (self.camera.position.x + 500 - self.camera.orientation.x * 100, self.camera.position.z + 500 - self.camera.orientation.z * 100), 5)
 
-        self.renderer.blit(self.background_image, pygame.Rect(0, 0, 1000, 800))
+        #self.renderer.blit(self.background_image, pygame.Rect(0, 0, 1000, 800))
 
         self.last_orientation = glm.vec3(self.camera.orientation.x, self.camera.orientation.y, self.camera.orientation.z) 
         matrix = self.model_renderer.update_camera()

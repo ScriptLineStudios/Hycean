@@ -1,6 +1,7 @@
 import pygame
+from pygame._sdl2 import Texture
 import glm
-from random import uniform
+from random import uniform, choice
 from pygame_3d import *
 from math import cos, sin
 
@@ -35,10 +36,19 @@ class Stars:
         
         self.ScreenSize = ScreenSize
 
-        self.texture = pygame._sdl2.Texture.from_surface(
-            renderer,
-            pygame.image.load('src/assets/star.png')
-        )
+        self.images = [
+            pygame.image.load('src/assets/stars/star1.png'),
+            pygame.image.load('src/assets/stars/star2.png'),
+            pygame.image.load('src/assets/stars/star3.png'),
+            pygame.image.load('src/assets/stars/star4.png'),
+            pygame.image.load('src/assets/stars/star5.png'),
+        ]
+        self.textures = []
+        for image in self.images:
+            texture = Texture.from_surface(
+                renderer, image
+            )
+            self.textures.append(texture)
         
         # origin = (0, 0, 0)
         self.vertices = []
@@ -51,7 +61,7 @@ class Stars:
             )
             
             self.vertices.append(direction)
-            self.stars.append(Sprite(self.texture, direction))
+            self.stars.append(Sprite(choice(self.textures), direction))
             
         self.vertices = np.array(self.vertices, dtype=np.double)
 
