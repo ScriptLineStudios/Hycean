@@ -6,6 +6,7 @@ from src.scripts.entities.asteroid import Asteroid
 from src.scripts.particles import SpaceParticles
 from src.scripts.controller import Controller
 from src.scripts.land_indicator import LandIndicator
+from src.scripts.sprite import Stars
 
 from src.scripts.states import Ocean
 
@@ -78,7 +79,8 @@ class Space(State):
 
         self.LandIndicator = LandIndicator(self.renderer, ScreenSize)
 
-        self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 100)
+        self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 200)
+        self.Stars = Stars(ScreenSize, self.renderer, 100)
         self.moving = False
         self.acceleration = 0
 
@@ -135,7 +137,14 @@ class Space(State):
                 distance = diffVec.length()
                 
                 if distance < 2.5:
-                    print('collision')
+                    self.GameOverSwitch(obstacle)
+
+    def GameOverSwitch(self, obstacle):
+        app = self.app
+        app.crnt_state = 'game_over'
+        app.state = app.states[app.crnt_state]
+        app.state.update_screen()
+        self.obstacles.remove(obstacle)
 
     def render(self):
         self.map_texture.fill((10, 10, 10))
@@ -146,7 +155,7 @@ class Space(State):
         pygame.draw.line(self.map_texture, (150, 200, 255), (self.camera.position.x + 500, self.camera.position.z + 500), 
         (self.camera.position.x + 500 - self.camera.orientation.x * 100, self.camera.position.z + 500 - self.camera.orientation.z * 100), 5)
 
-        self.renderer.blit(self.background_image, pygame.Rect(0, 0, 1000, 800))
+        #self.renderer.blit(self.background_image, pygame.Rect(0, 0, 1000, 800))
 
         self.last_orientation = glm.vec3(self.camera.orientation.x, self.camera.orientation.y, self.camera.orientation.z) 
         matrix = self.model_renderer.update_camera()
@@ -154,6 +163,7 @@ class Space(State):
             self.original_matrix = matrix
 
         self.model_renderer.sort_models()
+        self.Stars.render(matrix, self.camera)
         # self.SpaceParticles.render(matrix, self.camera)
 
         for model in self.model_renderer.models:

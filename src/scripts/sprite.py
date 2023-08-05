@@ -1,6 +1,7 @@
 import pygame
+from pygame._sdl2 import Texture
 import glm
-from random import uniform
+from random import uniform, choice
 from pygame_3d import *
 from math import cos, sin
 
@@ -30,19 +31,28 @@ class Sprite:
 
 
 class Stars:
-    @staticmethod
     def __init__(self, ScreenSize, renderer, starCount):
         self.stars = []
         
         self.ScreenSize = ScreenSize
 
-        self.texture = pygame._sdl2.Texture.from_surface(
-            renderer,
-            pygame.image.load('src/assets/star.png')
-        )
+        self.images = [
+            pygame.image.load('src/assets/stars/star1.png'),
+            pygame.image.load('src/assets/stars/star2.png'),
+            pygame.image.load('src/assets/stars/star3.png'),
+            pygame.image.load('src/assets/stars/star4.png'),
+            pygame.image.load('src/assets/stars/star5.png'),
+        ]
+        self.textures = []
+        for image in self.images:
+            texture = Texture.from_surface(
+                renderer, image
+            )
+            self.textures.append(texture)
         
         # origin = (0, 0, 0)
-        distance = 1
+        self.vertices = []
+        distance = 10000
         for starN in range(starCount):
             direction = glm.vec3(
                 cos(uniform(0.00, 6.28)) * distance,
@@ -51,7 +61,7 @@ class Stars:
             )
             
             self.vertices.append(direction)
-            self.stars.append(Sprite(self.texture, direction))
+            self.stars.append(Sprite(choice(self.textures), direction))
             
         self.vertices = np.array(self.vertices, dtype=np.double)
 
@@ -82,11 +92,10 @@ class Stars:
         self.rotation_matrix = glm.mat4()
 
         for i, vertex in enumerate(vertices):
-            v = glm.vec4(self.original_vertices[i])
+            v = glm.vec3(
+                self.original_vertices[i]
+            )
             vertices[i] = self.scale_matrix * (matrix * self.position_matrix * self.rotation_matrix) * v
-            self.average_z += vertices[i][2]
-
-        self.average_z /= len(vertices)
 
         screen_vertices = self.screen(self.three_to_two(vertices))
         
