@@ -8,6 +8,8 @@ from src.scripts.controller import Controller
 import math
 import time
 
+import os
+
 import pygame_shaders
 
 from copy import copy
@@ -269,6 +271,7 @@ class Player:
 class Ocean(State):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.player = Player(self)
 
         self.colors = {
@@ -281,9 +284,8 @@ class Ocean(State):
 
         self.screen_shake = 0
 
-        self.color = "red"
+        self.color = "blue"
 
-        self.surface = pygame.Surface((500, 400))
         self.particles = []
         self.missiles = []
 
@@ -302,18 +304,19 @@ class Ocean(State):
         self.safety = False
         self.ticks = 0
 
-    def start(self):
+        self.display = pygame.display.set_mode((1000, 800), pygame.OPENGL | pygame.DOUBLEBUF)
+        self.surface = pygame.Surface((500, 400))
         self.screen_shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, "src/assets/shaders/fragment.glsl", self.surface)
-
-        self.water_surface = pygame.Surface((100, 100))
-        self.water_surface.fill((255, 0, 0))
-        self.water_shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, "src/assets/shaders/water.glsl", self.water_surface)
+        
+    def start(self):
+        self.app.window.hide()
+        pygame.display.set_caption("OCEAN")
 
     def stop(self):
-        #this is VERY important.
-        self.screen_shader.ctx.release()
+        #this is VERY important
+        self.app.screen_shader.ctx.release()
         self.water_shader.ctx.release()
-        self.screen_shader.render_rect.vbo.release()
+        self.app.screen_shader.render_rect.vbo.release()
         self.water_shader.render_rect.vbo.release()
         self.water_shader.render_rect.vao.release()
         self.water_shader.render_rect.vao.release()
@@ -334,8 +337,6 @@ class Ocean(State):
 
     def render(self):
         self.ticks += 1
-        self.renderer.draw_color = self.colors[self.color]
-        self.renderer.clear()
         self.surface.fill(self.colors[self.color])
 
         self.camera += (pygame.Vector2(self.player.rect.x, self.player.rect.y) - self.camera - pygame.Vector2(250, 200)) / 5
@@ -349,7 +350,6 @@ class Ocean(State):
 
         mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
         pygame.draw.circle(self.surface, (255, 0, 0), mp, 3)
-
 
         for particle in self.particles:
             if particle.lifetime > 0:
@@ -367,15 +367,10 @@ class Ocean(State):
                     self.missiles.remove(missile)
             enemy.update()
 
-        self.screen_shader.send("time", self.time)
-        self.screen_shader.send("speed", self.splash_speed)
-
         self.splash_speed = max(self.splash_speed - 0.0001, 0.003)
-        self.water_shader.send("time", self.time)
 
         self.player.render()
         self.time += 0.01
-        # self.surface = self.shader.render_direct()
         dx, dy = 0, 0
         if self.screen_shake > 0:
             self.camera.x += random.uniform(-8, 8)
@@ -383,13 +378,16 @@ class Ocean(State):
 
             self.screen_shake -= 1
         
-        self.screen_shader.render_direct(pygame.Rect(dx, dy, 1000, 800), update_surface=True)
-
         pygame.draw.rect(self.surface, (255, 0, 0), (250 - (self.player.max_health / 2), 20, self.player.health, 20))
         pygame.draw.rect(self.surface, (0, 0, 0), (250 - (self.player.max_health / 2), 20, self.player.max_health, 20), 3)
 
-        self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, pygame.transform.flip(self.surface, False, True)), pygame.Rect(dx, dy, 1000, 800))
+        self.screen_shader.send("time", self.time)
+        self.screen_shader.send("speed", self.splash_speed)
 
+        self.screen_shader.render_direct(pygame.Rect(0, 0, 1000, 800))
+
+        pygame.display.set_caption(f"{self.app.clock.get_fps()}")
+        
     def handle_event(self, event):
 
         if event.type == pygame.MOUSEBUTTONDOWN:

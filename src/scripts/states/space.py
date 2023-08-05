@@ -192,6 +192,9 @@ class Space(State):
 
             if event.key == pygame.K_RETURN:
                 print("Its cutscene time")
+                self.app.crnt_state = 'ocean'
+                self.app.state = self.app.states[self.app.crnt_state]
+                self.app.state.start()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
