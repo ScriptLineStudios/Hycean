@@ -7,6 +7,8 @@ from src.scripts.particles import SpaceParticles
 from src.scripts.controller import Controller
 from src.scripts.land_indicator import LandIndicator
 
+from src.scripts.states import Ocean
+
 from copy import copy
 import random
 
@@ -23,8 +25,14 @@ class Space(State):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        #put actual here
         ScreenSize = (1000, 800)
+
+        self.music = pygame.mixer.music.load("src/assets/sound/ambientspacemusic.mp3")
+        pygame.mixer.music.play(-1)
+
+        self.engine_sound = pygame.mixer.Sound("src/assets/sound/engine.wav")
+        self.engine_sound.set_volume(0.4)
+        #put actual here
 
         self.background_image = pygame.image.load("src/assets/Space Background.png")
         self.background_image = pygame._sdl2.Texture.from_surface(self.renderer, self.background_image)
@@ -80,9 +88,11 @@ class Space(State):
         self.controller.update()
 
         if self.moving:
+            self.engine_sound.play()
             self.acceleration = min(self.acceleration + 0.1, 2)
         else:
-            self.acceleration = max(self.acceleration - 0.01, 0)
+            self.engine_sound.fadeout(40)
+            self.acceleration = max(self.acceleration - 0.005, 0)
 
         playerPos = copy(self.camera.position)
         playerPos.x -= glm.normalize(self.camera.orientation).x * 1.5
@@ -119,15 +129,13 @@ class Space(State):
 
                     self.LandIndicator.update_planet(obstacle, distance)
 
-            if type(obstacle) == Asteroid:
+            elif type(obstacle) == Asteroid:
                 obstacleRect = copy(obstacle.rect)
                 diffVec = pygame.Vector3(self.player.rect.center) - obstacleRect.center
                 distance = diffVec.length()
                 
                 if distance < 2.5:
                     print('collision')
-
-                self.LandIndicator.update_planet(obstacle, distance)
 
     def render(self):
         self.map_texture.fill((10, 10, 10))
@@ -171,8 +179,8 @@ class Space(State):
         # self.player.position_matrix = self.pos
         # self.player.rotation_matrix = self.rot
 
-        # text = self.font.render("""Needed Materials\nXenthium Alloy\nStarsteel Composite\nQuasarium Plating\nNebulonite Core\nIonite Infused Titanium\nGalaxyrium Mesh\nPlasma-forged Exoalloy\nCelestium Reinforcements\nVoidium Matrix\nMeteorium Resonators""", False, (255, 255, 255))
-        # self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), pygame.Rect(0, 210, text.get_width(), text.get_height()))
+        text = self.font.render(f"x: {int(self.camera.position.x)} y: {int(self.camera.position.y)} z: {int(self.camera.position.z)}", False, (255, 255, 255))
+        self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), pygame.Rect(0, 210, text.get_width(), text.get_height()))
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.map_texture), pygame.Rect(0, 0, 200, 200))
 
     def handle_event(self, event):
@@ -181,7 +189,10 @@ class Space(State):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.game_over = True
-        
+
+            if event.key == pygame.K_RETURN:
+                print("Its cutscene time")
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 pygame.mouse.set_pos((500, 400))

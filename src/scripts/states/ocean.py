@@ -64,14 +64,13 @@ class Anglerfish(Enemy):
     def __init__(self, scene, position):
         self.image = pygame.image.load("src/assets/anglerfish.png")
 
-        shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, pygame_shaders.DEFAULT_FRAGMENT_SHADER, self.image)
         self.speed = 0.8
         self.reverse = 1
         self.timeout = 0
 
         self.images = [pygame.image.load("src/assets/anglerfish1.png"), pygame.image.load("src/assets/anglerfish2.png"), pygame.image.load("src/assets/anglerfish3.png")]
         self.index = 0
-        super().__init__(scene, position, shader, self.images)
+        super().__init__(scene, position, None, self.images)
 
 
     def update(self):
@@ -272,11 +271,6 @@ class Ocean(State):
         super().__init__(*args, **kwargs)
         self.player = Player(self)
 
-        self.window = pygame._sdl2.Window("Hycean - Ocean", (1000, 800), opengl=True, borderless=False)
-        self.renderer = pygame._sdl2.Renderer(self.window)
-        print(self.renderer.get_viewport())
-        self.window.show()
-
         self.colors = {
             "blue": (0, 27, 63, 255),
             "red": (100, 20, 10, 255),
@@ -301,15 +295,28 @@ class Ocean(State):
 
         self.camera = pygame.Vector2(0, 0)
 
+        self.enemies = [Anglerfish(self, pygame.Vector2(10, 10))]
+
+        self.generate_chunks()
+
+        self.safety = False
+        self.ticks = 0
+
+    def start(self):
         self.screen_shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, "src/assets/shaders/fragment.glsl", self.surface)
 
         self.water_surface = pygame.Surface((100, 100))
         self.water_surface.fill((255, 0, 0))
         self.water_shader = pygame_shaders.Shader(pygame_shaders.DEFAULT_VERTEX_SHADER, "src/assets/shaders/water.glsl", self.water_surface)
 
-        self.enemies = [Anglerfish(self, pygame.Vector2(10, 10))]
-
-        self.generate_chunks()
+    def stop(self):
+        #this is VERY important.
+        self.screen_shader.ctx.release()
+        self.water_shader.ctx.release()
+        self.screen_shader.render_rect.vbo.release()
+        self.water_shader.render_rect.vbo.release()
+        self.water_shader.render_rect.vao.release()
+        self.water_shader.render_rect.vao.release()
 
     def generate_chunks(self):
         for chunk_x in range(-8, 8):
@@ -326,6 +333,7 @@ class Ocean(State):
         self.player.update()
 
     def render(self):
+        self.ticks += 1
         self.renderer.draw_color = self.colors[self.color]
         self.renderer.clear()
         self.surface.fill(self.colors[self.color])
@@ -374,8 +382,8 @@ class Ocean(State):
             self.camera.y += random.uniform(-8, 8)
 
             self.screen_shake -= 1
-            
-        self.screen_shader.render_direct(pygame.Rect(dx, dy, 1000, 800))
+        
+        self.screen_shader.render_direct(pygame.Rect(dx, dy, 1000, 800), update_surface=True)
 
         pygame.draw.rect(self.surface, (255, 0, 0), (250 - (self.player.max_health / 2), 20, self.player.health, 20))
         pygame.draw.rect(self.surface, (0, 0, 0), (250 - (self.player.max_health / 2), 20, self.player.max_health, 20), 3)
