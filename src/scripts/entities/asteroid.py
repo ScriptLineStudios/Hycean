@@ -13,5 +13,8 @@ class Asteroid(Entity):
         super().__init__("src/assets/models/asteroid/asteroid.obj", "src/assets/models/asteroid/asteroid.mtl")   
         self.lifetime = 500
 
+        self.rect = Rect3.from_vertices(self.vertices)
+
     def render(self, *args, **kwargs):
+        self.rect.position = self.position
         super().render(*args, **kwargs)

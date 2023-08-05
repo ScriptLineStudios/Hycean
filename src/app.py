@@ -17,9 +17,10 @@ class App:
         # self.window.hide()
 
         self.states = {
-            #'main_menu': Menu()
+            #'main_menu': Menu(),
             'space': Space(self.renderer),
             'ocean': Ocean(None),
+            'game_over': GameOver(self.renderer)
         }
 
         self.crnt_state = 'space'
@@ -39,6 +40,13 @@ class App:
                 if event.type == QUIT:
                     pygame.quit()
                     raise SystemExit
+
+                #DEBUG
+                if event.type == KEYDOWN:
+                    if event.key == K_SPACE:
+                        self.crnt_state = 'game_over'
+                        self.state = self.states[self.crnt_state]
+                        self.state.update_screen()
 
             renderer.draw_color = (255, 255, 255, 255)
             renderer.clear()
