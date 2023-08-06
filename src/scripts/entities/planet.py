@@ -3,6 +3,8 @@ import random
 from copy import copy
 import random
 
+import time
+
 from .entity import Entity
 
 from pygame_3d import *
@@ -12,6 +14,8 @@ class Planet(Entity):
     def __init__(self, scene, *args, **kwargs):
         super().__init__(*args, **kwargs)   
         self.scene = scene
+        self.app = self.scene.app
+
         self.rotation = glm.vec3(1, 0, 0)
         self.position = glm.vec3(-10, 0, 0)
         self.direction = glm.vec3(-0.001, 0, 0)
@@ -19,16 +23,24 @@ class Planet(Entity):
         size = random.uniform(0.5, 1)
         self.scale = glm.vec3(size, size, size)
 
-        self.planet_types = ["green", "red"]
+        #gotta come up with an method to distribute materials
+        try:
+            self.primary_material = random.choice(list(self.app.needed_resources.items()))
+            del self.app.needed_resources[self.primary_material[0]]
+        except:
+            self.primary_material = None
+            
+        self.planet_types = ["blue", "red"]
         
         self.planet_data = {
-            "green": {"water": -0.3, "water_color": (0, 0, 1), "land_color": (0.1, 0.8, 0.2)},
+            "blue": {"water": -0.3, "water_color": (0, 0, 1), "land_color": (0.1, 0.8, 0.2)},
             "red": {"water": 0.1, "water_color": (79/255, 90/255, 87/255), "land_color": (87/255, 20/255, 17/255)} 
         }
 
         self.type = random.choice(self.planet_types)
         self.data = self.planet_data[self.type]
 
+        opensimplex.seed(random.randrange(-1000, 1000))
         for i, face in enumerate(self.faces):
             scale = -0.3
             vert = sum(self.vertices[face.vertices]) / len(face.vertices)

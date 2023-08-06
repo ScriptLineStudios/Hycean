@@ -4,12 +4,32 @@ import pygame._sdl2
 from pygame.locals import *
 
 from src.scripts.states import *
+from src.scripts.ui import *
+
 import pygame_shaders
 
 pygame.init()
 
 class App:
     def __init__(self):
+        self.needed_resources = {
+            "Aluminum": 100,
+            "Fiber": 40,
+            "Titanium": 70,
+            "Bronze": 60,
+            "Steel": 15,
+            "Silver": 20,
+        }
+
+        self.needed_resources_stable = {
+            "Aluminum": 100,
+            "Fiber": 40,
+            "Titanium": 70,
+            "Bronze": 60,
+            "Steel": 15,
+            "Silver": 20,
+        }
+
         self.ScreenSize = (1000, 800)
         caption = 'Hycean - Space'
         
@@ -19,13 +39,15 @@ class App:
         self.states = {
             #'main_menu': Menu()
             'space': Space(self, self.renderer),
-            'ocean': Ocean(self, self.renderer),
-            'game_over': GameOver(self, self.renderer)
+            'game_over': GameOver(self, self.renderer),
+            "ocean": Ocean(self, self.renderer),
         }
 
-        self.crnt_state = 'space'
+        self.crnt_state = 'ocean'
         self.state = self.states[self.crnt_state]
         self.state.start()
+
+        self.ui = UI(self, self.renderer)
         #self.state.stop()
 
         #self.crnt_state = 'space'
@@ -35,6 +57,9 @@ class App:
         #self.crnt_state = 'ocean'
         #self.state = self.states[self.crnt_state]
         #self.state.start()
+
+
+        self.registered_matreials = []
 
         self.clock = pygame.time.Clock()
         self.fps = 60
@@ -47,6 +72,7 @@ class App:
             self.state.update()
             for event in pygame.event.get():
                 self.state.handle_event(event)
+                self.ui.events(event)
                 if event.type == QUIT:
                     pygame.quit()
                     raise SystemExit
@@ -61,6 +87,9 @@ class App:
             renderer.clear()
 
             self.state.render()
+
+            if self.crnt_state != "game_over":
+                self.ui.render()
 
             renderer.present()
             try:

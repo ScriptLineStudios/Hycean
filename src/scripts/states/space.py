@@ -62,6 +62,7 @@ class Space(State):
 
         for x in range(15):
             self.planet2 = Planet(self, "src/assets/models/planet/planet.obj", "src/assets/models/planet/planet.mtl")
+            self.planet2.id = x
             x, y = random.randrange(-500, 500), random.randrange(-500, 500)
             self.planet2.position = glm.vec3(x, 0, y)
             self.model_renderer.add_model(self.planet2)
@@ -85,6 +86,10 @@ class Space(State):
         self.acceleration = 0
 
         self.game_over = False
+        self.cutscene = False
+        self.cutscene_surface = pygame.Surface((500, 400))
+
+        self.gps = None
 
     def update(self):
         self.controller.update()
@@ -107,7 +112,8 @@ class Space(State):
         self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
         self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
 
-        if random.randrange(0, 300) == 4:
+        if random.randrange(0, 200) == 4:
+            print("asteroid")
             x, y = random.randrange(15, 30), 0
             asteroid = Asteroid(self)
             asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.z - glm.normalize(self.camera.orientation).z * x)
@@ -132,12 +138,16 @@ class Space(State):
                     self.LandIndicator.update_planet(obstacle, distance)
 
             elif type(obstacle) == Asteroid:
-                obstacleRect = copy(obstacle.rect)
-                diffVec = pygame.Vector3(self.player.rect.center) - obstacleRect.center
-                distance = diffVec.length()
+                # obstacleRect = copy(obstacle.rect)
+                # diffVec = pygame.Vector3(self.player.rect.center) - obstacleRect.center
+                # distance = diffVec.length()
                 
-                if distance < 2.5:
+                # if distance < 2.5:
+                #     self.GameOverSwitch(obstacle)
+                distance = glm.distance2(obstacle.position, (self.camera.position))
+                if distance < 0.4:
                     self.GameOverSwitch(obstacle)
+
 
     def GameOverSwitch(self, obstacle):
         print("switched")
@@ -182,7 +192,13 @@ class Space(State):
 
                 pygame.draw.circle(self.map_texture, model.type, (model.position.x + 500, model.position.z + 500), 15)
 
+        if self.gps is not None:
+            pygame.draw.line(self.map_texture, (0, 200, 0), (self.camera.position.x + 500, self.camera.position.z + 500), self.gps, 9)
+
         self.LandIndicator.draw()
+
+        if self.cutscene:
+            self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.cutscene_surface), pygame.Rect(0, 0, 1000, 800))
 
         text = self.font.render(f"x: {int(self.camera.position.x)} y: {int(self.camera.position.y)} z: {int(self.camera.position.z)}", False, (255, 255, 255))
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), pygame.Rect(0, 210, text.get_width(), text.get_height()))
@@ -196,13 +212,22 @@ class Space(State):
                 self.game_over = True
 
             if event.key == pygame.K_RETURN:
-                print("Its cutscene time")
-                self.app.crnt_state = 'ocean'
-                self.app.state = self.app.states[self.app.crnt_state]
-                self.app.state.start()
+                if self.LandIndicator.planet is not None:
+                    print(f"Its cutscene time {self.LandIndicator.planet}")
+                    self.cutscene = True
+                    ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type)
+                    self.app.states[f"ocean_{self.LandIndicator.planet.id}"] = ocean
+                    self.app.crnt_state = f"ocean_{self.LandIndicator.planet.id}"
+                    self.app.state = self.app.states[self.app.crnt_state]
+                    self.app.state.start()
+
+            if event.key == pygame.K_ESCAPE:
+                pygame.mouse.set_visible(self.camera.hidden)
+                self.camera.hidden = not self.camera.hidden
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            mp = pygame.mouse.get_pos()
+            if event.button == 1 and mp[0] < 700:
                 pygame.mouse.set_pos((500, 400))
                 pygame.mouse.set_visible(self.camera.hidden)
                 self.camera.hidden = not self.camera.hidden
