@@ -5,7 +5,9 @@ from string import ascii_letters
 
 import pygame
 from pygame.locals import KEYDOWN, K_r, K_SPACE, K_KP_ENTER
-from pygame._sdl2 import Texture, Image
+from pygame._sdl2 import Texture
+from json import load
+
 pygame.font.init()
 
 
@@ -33,6 +35,10 @@ class GameOver(State):
         self.maxScale = 1.2
         self.speed = 0.05
 
+        with open('src/assets/GameOverRandom.json', 'r') as file:
+            self.listText = load(file)['sentences']
+
+        self.RestartSound = pygame.mixer.Sound('src/assets/sound/restart.wav')
 
         self.update_screen()
 
@@ -41,6 +47,8 @@ class GameOver(State):
 
         self.game_over.draw(srcrect=None, dstrect=self.game_over_rect)
         self.asteroid_render.draw(srcrect=None, dstrect=self.asteroid_rect)
+
+        self.randomRender.draw(srcrect=None, dstrect=self.rndRenderRect)
 
         if self.RestartAnim:
             if self.scale < self.maxScale: 
@@ -75,7 +83,7 @@ class GameOver(State):
         )
 
     def update_screen(self):
-        # RESTARTS RESTART SCREEN
+        # RESTARTS GAME OVER SCREEN
         self.surface = self.renderer.to_surface()
         self.surface = pygame.transform.gaussian_blur(self.surface, 4)
         self.surface = pygame.transform.grayscale(self.surface)
@@ -88,6 +96,11 @@ class GameOver(State):
         self.asteroid_render = self.to_texture(self.asteroid_render)
         self.asteroid_rect = self.asteroid_render.get_rect(center = (500, 180))
 
+        randomText = choice(self.listText)
+        self.randomRender = self.font.render(randomText, False, (240, 240, 0))
+        self.randomRender = self.to_texture(self.randomRender)
+        self.rndRenderRect = self.randomRender.get_rect(center = (500, 400))
+
         self.RestartAnim = False
         self.scale = 1.0
         self.maxScale = 1.2
@@ -98,6 +111,6 @@ class GameOver(State):
     def handle_event(self, event):
         if event.type == KEYDOWN:
             if event.key in [K_r, K_SPACE, K_KP_ENTER]:
-                # - play sound here
+                self.RestartSound.play()
                 self.RestartAnim = True
                 self.restart = True

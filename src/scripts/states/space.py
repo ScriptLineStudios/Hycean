@@ -3,10 +3,9 @@ from src.scripts.entities.player import Player
 from src.scripts.entities.planet import Planet
 from src.scripts.entities.entity import Entity
 from src.scripts.entities.asteroid import Asteroid
-from src.scripts.particles import SpaceParticles
+from src.scripts.particles import Stars, JetFlame
 from src.scripts.controller import Controller
 from src.scripts.land_indicator import LandIndicator
-from src.scripts.sprite import Stars
 
 from src.scripts.states import Ocean
 
@@ -80,8 +79,8 @@ class Space(State):
 
         self.LandIndicator = LandIndicator(self.renderer, ScreenSize)
 
-        self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 200)
         self.Stars = Stars(ScreenSize, self.renderer, 100)
+        self.JetFlame = JetFlame(ScreenSize, self.renderer)
         self.moving = False
         self.acceleration = 0
 
@@ -95,22 +94,27 @@ class Space(State):
         self.controller.update()
 
         if self.moving:
-            self.engine_sound.play()
             self.acceleration = min(self.acceleration + 0.1, 2)
         else:
-            self.engine_sound.fadeout(40)
             self.acceleration = max(self.acceleration - 0.005, 0)
 
-        playerPos = copy(self.camera.position)
-        playerPos.x -= glm.normalize(self.camera.orientation).x * 1.5
-        playerPos.z -= glm.normalize(self.camera.orientation).z * 1.5
-        playerPos.y -= glm.normalize(self.camera.orientation).y * 1
-
-        self.player.update(playerPos)
 
         self.camera.position.x -= glm.normalize(self.camera.orientation).x / 7 * self.acceleration
         self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
         self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
+
+        playerPos = copy(self.camera.position)
+
+        playerPos.x -= glm.normalize(self.camera.orientation).x * 5
+        playerPos.z -= glm.normalize(self.camera.orientation).z * 5
+        playerPos.y -= glm.normalize(self.camera.orientation).y * 5
+
+        playerPos.z += 0.5
+        playerPos.y -= 3
+
+        self.JetFlame.add_particle(playerPos)
+
+        self.player.update(playerPos)
 
         if random.randrange(0, 200) == 4:
             print("asteroid")
@@ -150,7 +154,7 @@ class Space(State):
 
 
     def GameOverSwitch(self, obstacle):
-        print("switched")
+        self.engine_sound.fadeout(40)
         app = self.app
         app.crnt_state = 'game_over'
         app.state = app.states[app.crnt_state]
@@ -172,7 +176,7 @@ class Space(State):
             self.original_matrix = matrix
 
         self.model_renderer.sort_models()
-        self.Stars.render(matrix, self.camera)
+        self.Stars.render(matrix)
 
         for model in self.model_renderer.models:
             if type(model) != Player:
@@ -191,9 +195,11 @@ class Space(State):
                     surf.fill((0, 0, 255))
 
                 pygame.draw.circle(self.map_texture, model.type, (model.position.x + 500, model.position.z + 500), 15)
-
+        
         if self.gps is not None:
             pygame.draw.line(self.map_texture, (0, 200, 0), (self.camera.position.x + 500, self.camera.position.z + 500), self.gps, 9)
+
+        self.JetFlame.render(matrix)
 
         self.LandIndicator.draw()
 
@@ -233,8 +239,10 @@ class Space(State):
                 self.camera.hidden = not self.camera.hidden
 
             if event.button == 3:
+                self.engine_sound.play(-1)
                 self.moving = True
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 3:
+                self.engine_sound.fadeout(40)
                 self.moving = False
