@@ -3,10 +3,9 @@ from src.scripts.entities.player import Player
 from src.scripts.entities.planet import Planet
 from src.scripts.entities.entity import Entity
 from src.scripts.entities.asteroid import Asteroid
-from src.scripts.particles import SpaceParticles
+from src.scripts.particles import Stars, JetFire
 from src.scripts.controller import Controller
 from src.scripts.land_indicator import LandIndicator
-from src.scripts.sprite import Stars
 
 from src.scripts.states import Ocean
 
@@ -79,8 +78,8 @@ class Space(State):
 
         self.LandIndicator = LandIndicator(self.renderer, ScreenSize)
 
-        self.SpaceParticles = SpaceParticles((1000, 800), self.renderer, 200)
         self.Stars = Stars(ScreenSize, self.renderer, 100)
+        self.JetFire = JetFire(ScreenSize, self.renderer)
         self.moving = False
         self.acceleration = 0
 
@@ -99,7 +98,10 @@ class Space(State):
         playerPos = copy(self.camera.position)
         playerPos.x -= glm.normalize(self.camera.orientation).x * 1.5
         playerPos.z -= glm.normalize(self.camera.orientation).z * 1.5
-        playerPos.y -= glm.normalize(self.camera.orientation).y * 1
+        playerPos.y -= glm.normalize(self.camera.orientation).y * -5
+        
+
+        #self.JetFire.add_particle(playerPos)
 
         self.player.update(playerPos)
 
@@ -162,7 +164,7 @@ class Space(State):
             self.original_matrix = matrix
 
         self.model_renderer.sort_models()
-        self.Stars.render(matrix, self.camera)
+        self.Stars.render(matrix)
 
         for model in self.model_renderer.models:
             if type(model) != Player:
@@ -181,6 +183,8 @@ class Space(State):
                     surf.fill((0, 0, 255))
 
                 pygame.draw.circle(self.map_texture, model.type, (model.position.x + 500, model.position.z + 500), 15)
+        
+        #self.JetFire.render(matrix)
 
         self.LandIndicator.draw()
 
