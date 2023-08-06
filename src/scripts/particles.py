@@ -6,6 +6,7 @@ from random import uniform, choice
 from pygame_3d import *
 from math import cos, sin
 from .sprite import Sprite
+from copy import copy
 
 
 class Stars:
@@ -82,9 +83,9 @@ class Stars:
             self.stars[i].draw(vertex, 0.2)
 
 
-class JetFire:
+class JetFlame:
     def __init__(self, ScreenSize, renderer):
-        self.fire = []
+        self.flame = []
         
         self.ScreenSize = ScreenSize
 
@@ -102,9 +103,8 @@ class JetFire:
         
         self.timers = []
         self.vertices = []
-        self.vertices = np.array(self.vertices, dtype=np.double)
 
-        self.original_vertices = self.vertices.copy()
+        self.original_vertices = copy(self.vertices)
 
         self.position_matrix = glm.mat4()
         self.position = glm.vec3()
@@ -114,7 +114,7 @@ class JetFire:
 
         self.degree = 0
 
-        self.life_time = 50 # in frames
+        self.life_time = 100 # in frames
 
     @staticmethod
     def screen(v):
@@ -126,37 +126,28 @@ class JetFire:
     
     def add_particle(self, position):
         self.timers.append(self.life_time)
-        self.original_vertices = list(self.original_vertices)
         self.original_vertices.append(position)
-        self.vertices = list(self.vertices)
         self.vertices.append(position)
 
-        self.vertices = np.array(self.vertices, dtype=np.double)
-        self.original_vertices = np.array(self.original_vertices, dtype=np.double)
-
-        self.fire.append(Sprite(choice(self.textures), position))
+        self.flame.append(Sprite(choice(self.textures), position))
 
     def update(self):
-        to_remove = []
         for index, timer in enumerate(self.timers):
-            # REMOVE BREAK so it starts removing
-            break
+
             self.timers[index] -= 1
             if self.timers[index] <= 0:
                 self.timers.pop(index)
-                to_remove.append(index)
-                self.fire.pop(index)
-
-        #it would be awesome if i could remove elements from numpy array in any good way💀
-        #self.vertices = np.delete(self.vertices, to_remove)
-        #print(self.vertices, to_remove)
-        #self.original_vertices = np.delete(self.original_vertices, to_remove)
-                
+                self.original_vertices.pop(index)
+                self.vertices.pop(index)
+                self.flame.pop(index)
 
 
     def render(self, matrix):
         self.update()
-        vertices = self.vertices
+        vertices = np.array(self.vertices, dtype=np.double)
+        original_vertices = np.array(self.original_vertices, dtype=np.double)
+
+
 
         self.position_matrix = glm.mat4()
         self.position_matrix = glm.translate(self.position_matrix, self.position)
@@ -165,7 +156,7 @@ class JetFire:
 
         for i, vertex in enumerate(vertices):
             v = glm.vec3(
-                self.original_vertices[i]
+                original_vertices[i]
             )
 
             # = self.scale_matrix * (matrix * self.position_matrix * self.rotation_matrix) * v
@@ -176,8 +167,10 @@ class JetFire:
         for i, vertex in enumerate(screen_vertices):
             if vertices[i][2] < 0.0:
                 continue
-            self.fire[i].position = vertex
-            self.fire[i].draw(vertex, 0.2)
+            self.flame[i].position = vertex
+            self.flame[i].draw(vertex, 0.2)
+
+        #self.vertices = vertices
 
 
 #NOT FUNCTIONING, can be removed

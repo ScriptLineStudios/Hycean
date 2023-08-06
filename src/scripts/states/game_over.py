@@ -38,6 +38,7 @@ class GameOver(State):
         with open('src/assets/GameOverRandom.json', 'r') as file:
             self.listText = load(file)['sentences']
 
+        self.RestartSound = pygame.mixer.Sound('src/assets/sound/restart.wav')
 
         self.update_screen()
 
@@ -110,6 +111,6 @@ class GameOver(State):
     def handle_event(self, event):
         if event.type == KEYDOWN:
             if event.key in [K_r, K_SPACE, K_KP_ENTER]:
-                # - play sound here
+                self.RestartSound.play()
                 self.RestartAnim = True
                 self.restart = True
