@@ -32,6 +32,9 @@ class Space(State):
 
         self.engine_sound = pygame.mixer.Sound("src/assets/sound/engine.wav")
         self.engine_sound.set_volume(0.4)
+
+        self.land_sound = pygame.mixer.Sound("src/assets/sound/land.wav")
+        self.land_sound.set_volume(0.4)
         #put actual here
 
         self.background_image = pygame.image.load("src/assets/Space Background.png")
@@ -86,9 +89,13 @@ class Space(State):
 
         self.game_over = False
         self.cutscene = False
-        self.cutscene_surface = pygame.Surface((500, 400))
+        self.cutscene_surface = pygame.Surface((500, 400), pygame.SRCALPHA)
+        self.cutscene_surface.fill((0, 0, 0, 0))
+        self.cutscene_size = 1
 
         self.gps = None
+        self.t = 0
+        self.cutscene_complete = False
 
     def update(self):
         self.controller.update()
@@ -142,15 +149,10 @@ class Space(State):
                     self.LandIndicator.update_planet(obstacle, distance)
 
             elif type(obstacle) == Asteroid:
-                # obstacleRect = copy(obstacle.rect)
-                # diffVec = pygame.Vector3(self.player.rect.center) - obstacleRect.center
-                # distance = diffVec.length()
-                
-                # if distance < 2.5:
-                #     self.GameOverSwitch(obstacle)
-                distance = glm.distance2(obstacle.position, (self.camera.position))
-                if distance < 0.4:
-                    self.GameOverSwitch(obstacle)
+                if not self.cutscene:
+                    distance = glm.distance2(obstacle.position, (self.camera.position))
+                    if distance < 0.4:
+                        self.GameOverSwitch(obstacle)
 
 
     def GameOverSwitch(self, obstacle):
@@ -162,6 +164,7 @@ class Space(State):
         self.obstacles.remove(obstacle)
 
     def render(self):
+        self.t += 1
         self.map_texture.fill((10, 10, 10))
         self.renderer.draw_color = (0, 0, 0, 255)
         self.renderer.clear()
@@ -199,12 +202,23 @@ class Space(State):
         if self.gps is not None:
             pygame.draw.line(self.map_texture, (0, 200, 0), (self.camera.position.x + 500, self.camera.position.z + 500), self.gps, 9)
 
-        self.JetFlame.render(matrix)
+        # self.JetFlame.render(matrix)
 
         self.LandIndicator.draw()
 
         if self.cutscene:
+            self.cutscene_size += (self.cutscene_size / 16)
+            if self.cutscene_size > 2000:
+                self.cutscene_complete = True
+            pygame.draw.circle(self.cutscene_surface, (255, 255, 255), (250, 200), self.cutscene_size)
             self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.cutscene_surface), pygame.Rect(0, 0, 1000, 800))
+
+        if self.cutscene_complete:
+            ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type)
+            self.app.states[f"ocean_{self.LandIndicator.planet.id}"] = ocean
+            self.app.crnt_state = f"ocean_{self.LandIndicator.planet.id}"
+            self.app.state = self.app.states[self.app.crnt_state]
+            self.app.state.start()
 
         text = self.font.render(f"x: {int(self.camera.position.x)} y: {int(self.camera.position.y)} z: {int(self.camera.position.z)}", False, (255, 255, 255))
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), pygame.Rect(0, 210, text.get_width(), text.get_height()))
@@ -221,11 +235,10 @@ class Space(State):
                 if self.LandIndicator.planet is not None:
                     print(f"Its cutscene time {self.LandIndicator.planet}")
                     self.cutscene = True
-                    ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type)
-                    self.app.states[f"ocean_{self.LandIndicator.planet.id}"] = ocean
-                    self.app.crnt_state = f"ocean_{self.LandIndicator.planet.id}"
-                    self.app.state = self.app.states[self.app.crnt_state]
-                    self.app.state.start()
+                    self.land_sound.play()
+                    for obstacle in self.obstacles[:]:
+                        if type(obstacle) == Asteroid:
+                            self.obstacles.remove(obstacle)
 
             if event.key == pygame.K_ESCAPE:
                 pygame.mouse.set_visible(self.camera.hidden)
