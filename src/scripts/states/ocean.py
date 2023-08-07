@@ -19,6 +19,16 @@ opensimplex.seed(int(time.time()))
 import pygame
 pygame.font.init()
 
+class Chest:
+    def __init__(self, scene, position):
+        self.scene = scene
+        self.position = position
+        self.rect = pygame.Rect(*self.position, 32, 32)
+        self.image = pygame.image.load("src/assets/chest.png")
+
+    def update(self):
+        self.scene.surface.blit(self.image, self.position - self.scene.camera)
+
 class EnemyBullet:
     def __init__(self, scene, position, direction):
         self.scene = scene
@@ -93,7 +103,6 @@ class Octo(Enemy):
         self.images = [pygame.image.load("src/assets/octo1.png"), pygame.image.load("src/assets/octo2.png"), pygame.image.load("src/assets/octo3.png")]
         self.index = 0
 
-        self.dir_offset = pygame.Vector2(random.randrange(-5, 5), random.randrange(-5, 5)).normalize()
         super().__init__(scene, position, None, self.images)
 
     def update(self):
@@ -114,7 +123,7 @@ class Octo(Enemy):
 
         self.flipped_y = bool(self.position.y > self.scene.player.position.y)
 
-        if random.randrange(0, 40) == 5:
+        if random.randrange(0, 100) == 5:
             self.scene.enemy_bullets.append(EnemyBullet(self.scene, self.position.copy(), (self.scene.player.position - self.position).normalize()))
 
         super().update()
@@ -132,6 +141,8 @@ class Anglerfish(Enemy):
         self.index = 0
         super().__init__(scene, position, None, self.images)
 
+        self.s = self.scene.glow(100)
+
     def update(self):
         direction = (self.position - self.scene.player.position).normalize()
         rect = pygame.Rect(*(self.position), 32, 16)
@@ -148,8 +159,7 @@ class Anglerfish(Enemy):
 
         self.position -= self.reverse * direction * self.speed
 
-        s = self.scene.glow(100)
-        self.scene.lighting.blit(s, self.position - self.scene.camera + pygame.Vector2(-25, -25), special_flags=pygame.BLEND_RGBA_ADD)
+        self.scene.lighting.blit(self.s, self.position - self.scene.camera + pygame.Vector2(-25, -25), special_flags=pygame.BLEND_RGBA_ADD)
 
         super().update()
 
@@ -345,6 +355,7 @@ class Ocean(State):
     def __init__(self, *args, color="blue", **kwargs):
         super().__init__(*args, **kwargs)
         self.player = Player(self)
+        self.light = pygame.transform.scale(pygame.image.load("src/assets/light.png"), (100, 90))
 
         self.colors = {
             "blue": (0, 27, 63, 255),
@@ -374,21 +385,22 @@ class Ocean(State):
 
         self.enemy_bullets = []
 
+        self.chest_spawned = False
+        self.potential_positions = []
         self.generate_chunks()
 
         self.safety = False
         self.ticks = 0
 
-        self.light = pygame.transform.scale(pygame.image.load("src/assets/light.png"), (100, 90))
-
         self.enemy_choices = {
-            "blue": [Anglerfish, Eel, Octo],
+            "blue": [Anglerfish, Eel, Anglerfish, Eel, Octo],
         }
 
         self.light_index = 0
 
         self.lighting = pygame.Surface((1000, 800))
         self.lighting.set_colorkey((0, 0, 0))
+
 
     def glow(self, size):
         lighting_surface = pygame.Surface((size, size))
@@ -406,7 +418,20 @@ class Ocean(State):
                         col = opensimplex.noise2((x + chunk_x * 16) / 20, (y + chunk_y * 16) / 20)
                         if col > 0.3:
                             chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
+                        else:
+                            if not self.chest_spawned:
+                                if random.randrange(0, 100) < 10:
+                                    position = pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)
+                                    self.chest = Chest(self, position)
+                                    distance = pygame.math.clamp(position.distance_to(pygame.Vector2(0, 0)), 0, 900)
+                                    if random.randrange(0, 1000) < distance:
+                                        chunk.append(self.chest)
+                                        self.chest_spawned = True
+
+                                    self.potential_positions.append((pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
+                                 
                 self.chunks[(chunk_x, chunk_y)] = chunk
+        print(self.chest_spawned)
 
     def update(self):
         pass
@@ -428,9 +453,9 @@ class Ocean(State):
                         block.update()
                         blocks.append(block.rect)
 
-        # if random.randrange(0, 800) < 10:
-        #     print("Spawning enemies")
-        #     self.enemies.append(random.choice(self.enemy_choices[self.color])(self, self.player.position + pygame.Vector2(random.randrange(-400, 400), random.randrange(-400, 400))))
+        if random.randrange(0, 1800) < 10:
+            print("Spawning enemies")
+            self.enemies.append(random.choice(self.enemy_choices[self.color])(self, self.player.position + pygame.Vector2(random.randrange(-400, 400), random.randrange(-400, 400))))
 
         mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
         pygame.draw.circle(self.surface, (255, 0, 0), mp, 3)
