@@ -72,10 +72,11 @@ class GameOver(State):
     def restart_space(self):
         # RESTART SPACE STATE
         app = self.app
+        app.state.stop()
         app.crnt_state = 'space'
         app.state = app.states[app.crnt_state]
-
-        #app.state.restart()
+        app.state.start()
+        app.state.restart()
 
     def to_texture(self, surface):
         return Texture.from_surface(

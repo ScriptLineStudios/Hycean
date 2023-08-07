@@ -25,10 +25,11 @@ class Space(State):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ScreenSize = (1000, 800)
+        self.ScreenSize = (1000, 800)
 
         self.music = pygame.mixer.music.load("src/assets/sound/ambientspacemusic.mp3")
-        # pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.2)
+        pygame.mixer.music.play(-1)
 
         self.engine_sound = pygame.mixer.Sound("src/assets/sound/engine.wav")
         self.engine_sound.set_volume(0.4)
@@ -60,7 +61,7 @@ class Space(State):
         self.map_texture.fill((0, 0, 0))
 
         self.obstacles = []
-        self.controller = Controller(self, self.renderer, ScreenSize)
+        self.controller = Controller(self, self.renderer, self.ScreenSize)
 
         for x in range(15):
             self.planet2 = Planet(self, "src/assets/models/planet/planet.obj", "src/assets/models/planet/planet.mtl")
@@ -80,10 +81,10 @@ class Space(State):
 
         self.model_renderer.add_model(self.player)
 
-        self.LandIndicator = LandIndicator(self.renderer, ScreenSize)
+        self.LandIndicator = LandIndicator(self.renderer, self.ScreenSize)
 
-        self.Stars = Stars(ScreenSize, self.renderer, 100)
-        self.JetFlame = JetFlame(ScreenSize, self.renderer)
+        self.Stars = Stars(self.ScreenSize, self.renderer, 100)
+        self.JetFlame = JetFlame(self.ScreenSize, self.renderer)
         self.moving = False
         self.acceleration = 0
 
@@ -119,7 +120,8 @@ class Space(State):
         playerPos.z += 0.5
         playerPos.y -= 3
 
-        self.JetFlame.add_particle(playerPos)
+        if self.moving:
+            self.JetFlame.add_particle(playerPos)
 
         self.player.update(playerPos)
 
@@ -162,6 +164,43 @@ class Space(State):
         app.state = app.states[app.crnt_state]
         app.state.update_screen()
         self.obstacles.remove(obstacle)
+
+    def restart(self):
+        # when "R" is pressed in game over state, calls this function
+        self.model_renderer = ModelRenderer(self.camera)
+        self.camera.orientation = glm.vec3(1, -0.1, -0.02)
+
+        self.cam_target_position = glm.vec3(3.1, 1.2, 0)
+        self.camera.position = self.cam_target_position
+        self.last_orientation = glm.vec3(0, 0,0)
+
+        self.obstacles = []
+        self.model_renderer.models.clear()
+
+        self.model_renderer.add_model(self.player)
+
+        self.JetFlame.clear()
+
+        self.camera.acceleration *= 0
+        self.camera.velocity *= 0
+
+        self.gps = None
+        self.app.needed_resources = copy(self.app.needed_resources_stable)
+
+        for x in range(15):
+            self.planet2 = Planet(self, "src/assets/models/planet/planet.obj", "src/assets/models/planet/planet.mtl")
+            self.planet2.id = x
+            x, y = random.randrange(-500, 500), random.randrange(-500, 500)
+            self.planet2.position = glm.vec3(x, 0, y)
+            self.model_renderer.add_model(self.planet2)
+            self.obstacles.append(self.planet2)
+
+            x += 500
+            y += 500
+            
+            pygame.draw.circle(self.map_texture, (0, 0, 255), (x, y), 4)
+
+        self.LandIndicator = LandIndicator(self.renderer, self.ScreenSize)
 
     def render(self):
         self.t += 1

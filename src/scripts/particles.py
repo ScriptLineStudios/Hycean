@@ -29,18 +29,32 @@ class Stars:
             )
             self.textures.append(texture)
         
+        easterEgg = pygame.image.load('src/assets/pg_chad.png')
+        self.easterEgg = Texture.from_surface(
+                renderer, easterEgg
+        )
+
         # origin = (0, 0, 0)
         self.vertices = []
         distance = 10000
+        easterEggAdd = True
         for starN in range(starCount):
             direction = glm.vec3(
                 cos(uniform(0.00, 6.28)) * distance,
                 sin(uniform(0.00, 6.28)) * distance,
                 cos(uniform(0.00, 6.28)) * distance
             )
+
+            if easterEggAdd:
+                self.vertices.append(direction)
+                self.stars.append(Sprite(self.easterEgg, direction))
+                easterEggAdd = False
+                continue
             
             self.vertices.append(direction)
             self.stars.append(Sprite(choice(self.textures), direction))
+
+
             
         self.vertices = np.array(self.vertices, dtype=np.double)
 
@@ -116,6 +130,13 @@ class JetFlame:
 
         self.life_time = 100 # in frames
 
+        #please don't ask what is this💀
+        self.timers.append(100000000)
+        self.original_vertices.append((100000, 100000, 100000))
+        self.vertices.append((100000, 100000, 100000))
+
+        self.flame.append(Sprite(choice(self.textures), (100000, 100000, 100000)))
+
     @staticmethod
     def screen(v):
         return np.column_stack((((v[:, 0] + 1) / 2) * 1000, (1 - (v[:, 1] + 1) / 2) * 800))
@@ -130,6 +151,20 @@ class JetFlame:
         self.vertices.append(position)
 
         self.flame.append(Sprite(choice(self.textures), position))
+
+    def clear(self):
+        self.timers = []
+        self.original_vertices = []
+        self.vertices = []
+        self.flame = []
+
+        #please don't ask what is this💀
+        self.timers.append(100000000)
+        self.original_vertices.append((100000, 100000, 100000))
+        self.vertices.append((100000, 100000, 100000))
+
+        self.flame.append(Sprite(choice(self.textures), (100000, 100000, 100000)))
+
 
     def update(self):
         for index, timer in enumerate(self.timers):
@@ -167,10 +202,10 @@ class JetFlame:
         for i, vertex in enumerate(screen_vertices):
             if vertices[i][2] < 0.0:
                 continue
+            if i == 0:  # do not ask what is this
+                continue
             self.flame[i].position = vertex
             self.flame[i].draw(vertex, 0.2)
-
-        #self.vertices = vertices
 
 
 #NOT FUNCTIONING, can be removed

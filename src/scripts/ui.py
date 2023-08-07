@@ -39,6 +39,7 @@ class Button:
     def on_click(self):
         if self.app.crnt_state == "space":
             print(f"Locating: {self.material}")
+            
             for model in self.app.state.model_renderer.models:
                 if type(model) == Planet:
                     if model.primary_material:
