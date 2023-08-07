@@ -1,0 +1,8 @@
+{
+    "ambientspacemusic": "ambientspacemusic.mp3",
+    "engine": "engine.wav",
+    "volume_feedback": "volume_feedback.wav",
+    "restart": "restart.wav",
+    "click": "click.wav",
+    "gps": "gps.wav"
+}

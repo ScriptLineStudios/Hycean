@@ -2,6 +2,7 @@ import pygame
 import pygame._sdl2
 
 from src.scripts.entities.planet import Planet
+from src.scripts.audio_handler import AudioHandler
 
 import math
 import threading
@@ -57,8 +58,8 @@ class UI:
         self.computer_ui = pygame.image.load("src/assets/computer.png")
         self.computer_texture = pygame._sdl2.Texture.from_surface(self.renderer, self.computer_ui)
         
-        self.click = pygame.mixer.Sound("src/assets/sound/click.wav")
-        self.gps = pygame.mixer.Sound("src/assets/sound/gps.wav")
+        self.click = AudioHandler.sounds['click']
+        self.gps = AudioHandler.sounds['gps']
         
         self.computer_rect = pygame.Rect(0, 0, 1, 1)
 

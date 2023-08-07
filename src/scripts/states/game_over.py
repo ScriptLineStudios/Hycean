@@ -1,4 +1,5 @@
 from .state import State
+from src.scripts.audio_handler import AudioHandler
 
 from random import randint, choice
 from string import ascii_letters
@@ -7,6 +8,7 @@ import pygame
 from pygame.locals import KEYDOWN, K_r, K_SPACE, K_KP_ENTER
 from pygame._sdl2 import Texture
 from json import load
+
 
 pygame.font.init()
 
@@ -38,8 +40,12 @@ class GameOver(State):
         with open('src/assets/GameOverRandom.json', 'r') as file:
             self.listText = load(file)['sentences'][:-1]
 
+<<<<<<< HEAD
         print(self.listText)
         self.RestartSound = pygame.mixer.Sound('src/assets/sound/restart.wav')
+=======
+        self.RestartSound = AudioHandler.sounds['restart']
+>>>>>>> b08594907cda29a36644af290fad4e9346e387a9
 
         self.update_screen()
 
