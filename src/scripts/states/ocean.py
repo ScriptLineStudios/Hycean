@@ -19,6 +19,8 @@ opensimplex.seed(int(time.time()))
 import pygame
 pygame.font.init()
 
+
+
 class Chest:
     def __init__(self, scene, position):
         self.scene = scene
@@ -230,13 +232,26 @@ class Missle:
             self.scene.particles.append(Particle(self.scene, pygame.Vector2(self.position.x, self.position.y + 16), (0, -1), s))
 
 class Tile:
-    def __init__(self, scene, surface, position):
+    def __init__(self, scene, surface, position, material=None):
         self.scene = scene
         self.surface = surface
         self.position = position
         self.rect = pygame.Rect(*self.position, 16, 16)
+        self.material = material
+        self.remove = False
 
-    def update(self):
+    def update(self, missiles):
+        for missile in missiles:
+            if self.rect.colliderect(pygame.Rect(missile.position.x, missile.position.y, 16, 16)):
+                missiles.remove(missile)
+                if self.material:
+                    self.remove = True
+                    sx, sy = self.surface.get_size()
+                    for x in range(random.randrange(1, 4)):
+                        subsurf = self.surface.subsurface(random.randrange(0, sx - 5), random.randrange(0, sy - 5), 4, 4)
+                        print(self.scene.material)
+                        self.scene.particles.append(Material(self.scene.material, self.scene, self.position.copy(), pygame.Vector2(missile.direction.x + random.normalvariate(0, 0.3), missile.direction.y + random.normalvariate(0, 0.3)), subsurf))
+
         self.scene.surface.blit(self.surface, self.position - self.scene.camera)
 
 class Particle:
@@ -251,6 +266,18 @@ class Particle:
         self.lifetime -= 1
         self.position += self.veclocity
         self.scene.surface.blit(self.surface, self.position - self.scene.camera)
+
+class Material(Particle):
+    def __init__(self, tp, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.image = pygame.image.load(f"src/assets/{tp.lower()}.png")
+        self.surface = self.image
+        self.rotation = 0
+        
+    def update(self):
+        self.rotation += 1
+        self.position -= self.veclocity
+        self.scene.surface.blit(pygame.transform.rotate(self.image, self.rotation), self.position - self.scene.camera)
 
 class Player:
     def __init__(self, scene):
@@ -352,16 +379,30 @@ class Player:
         self.moving = False
 
 class Ocean(State):
-    def __init__(self, *args, color="blue", **kwargs):
+    def __init__(self, *args, material, color="blue", **kwargs):
         super().__init__(*args, **kwargs)
         self.player = Player(self)
         self.light = pygame.transform.scale(pygame.image.load("src/assets/light.png"), (100, 90))
-
+        self.material = material
         self.colors = {
             "blue": (0, 27, 63, 255),
             "red": (100, 20, 10, 255),
             "green": (40, 200, 60, 255)
         }
+
+        self.resources = [
+            "Aluminum",
+            "Fiber",
+            "Titanium",
+            "Bronze",
+            "Steel",
+            "Silver",
+        ]
+
+        self.materials = {x: pygame.image.load(f"src/assets/{x.lower()}_ore.png") for x in self.resources}
+        for x in self.materials.keys():
+            self.materials[x] = pygame.transform.scale(self.materials[x], (32,32))
+            self.materials[x].set_colorkey((255, 255, 255))
 
         self.time = 0
 
@@ -401,7 +442,6 @@ class Ocean(State):
         self.lighting = pygame.Surface((1000, 800))
         self.lighting.set_colorkey((0, 0, 0))
 
-
     def glow(self, size):
         lighting_surface = pygame.Surface((size, size))
         lighting_surface.set_colorkey((0,0,0))
@@ -417,21 +457,17 @@ class Ocean(State):
                     for y in range(16):
                         col = opensimplex.noise2((x + chunk_x * 16) / 20, (y + chunk_y * 16) / 20)
                         if col > 0.3:
-                            chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
-                        else:
-                            if not self.chest_spawned:
-                                if random.randrange(0, 100) < 10:
-                                    position = pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)
-                                    self.chest = Chest(self, position)
-                                    distance = pygame.math.clamp(position.distance_to(pygame.Vector2(0, 0)), 0, 900)
-                                    if random.randrange(0, 1000) < distance:
-                                        chunk.append(self.chest)
-                                        self.chest_spawned = True
+                            if self.material:
+                                ore = opensimplex.noise2(((x + 398479237) + chunk_x * 16) / 20, ((y + 984798327) + chunk_y * 16) / 20)
+                                if ore > 0.1:
+                                    chunk.append(Tile(self, self.materials[self.material], pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16), material=self.material))
+                            
+                                else:
+                                    chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
+                            else:
+                                chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
 
-                                    self.potential_positions.append((pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
-                                 
                 self.chunks[(chunk_x, chunk_y)] = chunk
-        print(self.chest_spawned)
 
     def update(self):
         pass
@@ -448,12 +484,23 @@ class Ocean(State):
         cx, cy = self.player.position // 16 // 16
         for x in range(-2, 2):
             for y in range(-2, 2):
-                for block in self.chunks[(cx + x, cy + y)]:
-                    if block.position.distance_to(self.player.position) < 300:
-                        block.update()
-                        blocks.append(block.rect)
+                try:
+                    removal = False
+                    for block in self.chunks[(cx + x, cy + y)]:
+                        if block.position.distance_to(self.player.position) < 300:
+                            block.update(self.missiles)
+                            blocks.append(block.rect)
+                            if block.remove:
+                                self.chunks[(x + cx, y + cy)].remove(block)
+                                removal = True
+                            # elif removal:
+                                # if random.randrange(0, 10) < 5:
+                                # self.chunks[(x + cx, y + cy)].remove(block)
 
-        if random.randrange(0, 1800) < 10:
+                except KeyError:
+                    pass
+
+        if random.randrange(0, 2200) < 10:
             print("Spawning enemies")
             self.enemies.append(random.choice(self.enemy_choices[self.color])(self, self.player.position + pygame.Vector2(random.randrange(-400, 400), random.randrange(-400, 400))))
 

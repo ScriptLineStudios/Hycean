@@ -36,8 +36,9 @@ class GameOver(State):
         self.speed = 0.05
 
         with open('src/assets/GameOverRandom.json', 'r') as file:
-            self.listText = load(file)['sentences']
+            self.listText = load(file)['sentences'][:-1]
 
+        print(self.listText)
         self.RestartSound = pygame.mixer.Sound('src/assets/sound/restart.wav')
 
         self.update_screen()

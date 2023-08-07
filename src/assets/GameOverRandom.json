@@ -7,7 +7,7 @@
         "Evasive maneuvers failed! Collision imminent",
         "Captain, we've been hit!",
         "Impact detected! Shields failing, we're going down",
-        "*put here pygame easter egg*",
-        "You forgot to fasten your safety belt, sir"
+        "You forgot to fasten your safety belt, sir",
+        "This text will never appear... strange"
     ]
 }

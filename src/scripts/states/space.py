@@ -253,7 +253,7 @@ class Space(State):
             self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.cutscene_surface), pygame.Rect(0, 0, 1000, 800))
 
         if self.cutscene_complete:
-            ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type)
+            ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type, material=self.LandIndicator.planet.primary_material[0])
             self.app.states[f"ocean_{self.LandIndicator.planet.id}"] = ocean
             self.app.crnt_state = f"ocean_{self.LandIndicator.planet.id}"
             self.app.state = self.app.states[self.app.crnt_state]

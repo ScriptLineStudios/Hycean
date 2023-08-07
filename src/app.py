@@ -40,24 +40,14 @@ class App:
             #'main_menu': Menu()
             'space': Space(self, self.renderer),
             'game_over': GameOver(self, self.renderer),
-            "ocean": Ocean(self, self.renderer),
+            "ocean": Ocean(self, self.renderer, material="Aluminum"),
         }
 
-        self.crnt_state = 'space'
+        self.crnt_state = 'ocean'
         self.state = self.states[self.crnt_state]
         self.state.start()
 
         self.ui = UI(self, self.renderer)
-        #self.state.stop()
-
-        #self.crnt_state = 'space'
-        #self.state = self.states[self.crnt_state]
-        #self.state.start()
-        
-        #self.crnt_state = 'ocean'
-        #self.state = self.states[self.crnt_state]
-        #self.state.start()
-
 
         self.registered_matreials = []
 
