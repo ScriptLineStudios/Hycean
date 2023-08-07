@@ -152,6 +152,20 @@ class JetFlame:
 
         self.flame.append(Sprite(choice(self.textures), position))
 
+    def clear(self):
+        self.timers = []
+        self.original_vertices = []
+        self.vertices = []
+        self.flame = []
+
+        #please don't ask what is this💀
+        self.timers.append(100000000)
+        self.original_vertices.append((100000, 100000, 100000))
+        self.vertices.append((100000, 100000, 100000))
+
+        self.flame.append(Sprite(choice(self.textures), (100000, 100000, 100000)))
+
+
     def update(self):
         for index, timer in enumerate(self.timers):
 
