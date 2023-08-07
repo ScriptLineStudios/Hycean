@@ -43,7 +43,7 @@ class App:
             "ocean": Ocean(self, self.renderer),
         }
 
-        self.crnt_state = 'ocean'
+        self.crnt_state = 'space'
         self.state = self.states[self.crnt_state]
         self.state.start()
 

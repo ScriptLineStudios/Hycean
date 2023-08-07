@@ -28,7 +28,8 @@ class Space(State):
         ScreenSize = (1000, 800)
 
         self.music = pygame.mixer.music.load("src/assets/sound/ambientspacemusic.mp3")
-        # pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.2)
+        pygame.mixer.music.play(-1)
 
         self.engine_sound = pygame.mixer.Sound("src/assets/sound/engine.wav")
         self.engine_sound.set_volume(0.4)
@@ -112,7 +113,8 @@ class Space(State):
         playerPos.z += 0.5
         playerPos.y -= 3
 
-        self.JetFlame.add_particle(playerPos)
+        if self.moving:
+            self.JetFlame.add_particle(playerPos)
 
         self.player.update(playerPos)
 
