@@ -6,7 +6,7 @@ from src.scripts.entities.asteroid import Asteroid
 from src.scripts.particles import Stars, JetFlame
 from src.scripts.controller import Controller
 from src.scripts.land_indicator import LandIndicator
-
+from src.scripts.audio_handler import AudioHandler
 from src.scripts.states import Ocean
 
 from copy import copy
@@ -31,7 +31,7 @@ class Space(State):
         pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play(-1)
 
-        self.engine_sound = pygame.mixer.Sound("src/assets/sound/engine.wav")
+        self.engine_sound = AudioHandler.sounds['engine']
         self.engine_sound.set_volume(0.4)
         #put actual here
 

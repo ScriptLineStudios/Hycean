@@ -3,8 +3,10 @@ import pygame._sdl2
 #from pygame._sdl2 import Window, Renderer
 from pygame.locals import *
 
+from src.scripts.audio_handler import AudioHandler
 from src.scripts.states import *
 from src.scripts.ui import *
+
 
 import pygame_shaders
 
@@ -37,13 +39,13 @@ class App:
         self.renderer = pygame._sdl2.Renderer(self.window)
 
         self.states = {
-            #'main_menu': Menu()
+            'main_menu': Menu(self, self.renderer),
             'space': Space(self, self.renderer),
-            'game_over': GameOver(self, self.renderer),
             "ocean": Ocean(self, self.renderer),
+            'game_over': GameOver(self, self.renderer)
         }
 
-        self.crnt_state = 'space'
+        self.crnt_state = 'main_menu'
         self.state = self.states[self.crnt_state]
         self.state.start()
 
@@ -88,7 +90,7 @@ class App:
 
             self.state.render()
 
-            if self.crnt_state != "game_over":
+            if self.crnt_state != "game_over" and self.crnt_state != "main_menu":
                 self.ui.render()
 
             renderer.present()
