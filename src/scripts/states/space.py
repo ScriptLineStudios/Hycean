@@ -256,6 +256,13 @@ class Space(State):
             ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type, material=self.LandIndicator.planet.primary_material[0])
             self.app.states[f"ocean_{self.LandIndicator.planet.id}"] = ocean
             self.app.crnt_state = f"ocean_{self.LandIndicator.planet.id}"
+            
+            self.cutscene = False
+            self.cutscene_surface = pygame.Surface((500, 400), pygame.SRCALPHA)
+            self.cutscene_surface.fill((0, 0, 0, 0))
+            self.cutscene_size = 1
+            self.cutscene_complete = False
+            
             self.app.state = self.app.states[self.app.crnt_state]
             self.app.state.start()
 

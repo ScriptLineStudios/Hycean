@@ -41,11 +41,11 @@ class App:
         self.states = {
             'main_menu': Menu(self, self.renderer),
             'space': Space(self, self.renderer),
-            "ocean": Ocean(self, self.renderer),
+            "ocean": Ocean(self, self.renderer, material="Silver"),
             'game_over': GameOver(self, self.renderer)
         }
 
-        self.crnt_state = 'main_menu'
+        self.crnt_state = 'space'
         self.state = self.states[self.crnt_state]
         self.state.start()
 
