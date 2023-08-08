@@ -28,7 +28,7 @@ class Space(State):
         super().__init__(*args, **kwargs)
 
         self.ScreenSize = (1000, 800)
-
+        
         self.music = pygame.mixer.music.load("src/sfx/ambientspacemusic.mp3")
         pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play(-1)
@@ -139,8 +139,8 @@ class Space(State):
         #playerPos.z += 0.5
         #playerPos.y -= 3
 
-        if self.moving:
-            self.JetFlame.add_particle(playerPos)
+        # if self.moving:
+            # self.JetFlame.add_particle(playerPos)
 
         self.player.update(playerPos)
         
@@ -288,7 +288,11 @@ class Space(State):
             self.cutscene_surface.fill((0, 0, 0, 0))
             self.cutscene_size = 1
             self.cutscene_complete = False
-            
+    
+            self.camera.hidden = False
+
+            pygame.mouse.set_visible(True)
+
             self.app.state = self.app.states[self.app.crnt_state]
             self.app.state.start()
 

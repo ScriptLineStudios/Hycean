@@ -48,6 +48,10 @@ class EnemyBullet:
         self.position += self.direction * 2
         self.scene.surface.blit(self.image, self.position - self.scene.camera)
 
+        if pygame.Rect(*self.position, 16, 16).colliderect(self.scene.player.rect):
+            self.scene.player.take_damage(1)
+            self.lifetime = -1
+
 class Enemy:
     def __init__(self, scene, position, shader, images):
         self.scene = scene
@@ -80,8 +84,11 @@ class Enemy:
             self.images[i] = self.solid_overlay(image)
         self.direction = missile.direction
 
-        if random.randrange(0, 5) == 2:
-            self.scene.particles.append(Material(self.scene.material, self.scene, self.position.copy(), -pygame.Vector2(self.direction.x + random.normalvariate(0, 0.3), self.direction.y + random.normalvariate(0, 0.3)), None))
+        try:
+            if random.randrange(0, 5) == 2:
+                self.scene.particles.append(Material(self.scene.material, self.scene, self.position.copy(), -pygame.Vector2(self.direction.x + random.normalvariate(0, 0.3), self.direction.y + random.normalvariate(0, 0.3)), None))
+        except:
+            pass
 
     def update(self):
         if self.cooldown > 0:
@@ -437,6 +444,11 @@ class Player:
 class Ocean(State):
     def __init__(self, *args, material, color="blue", **kwargs):
         super().__init__(*args, **kwargs)
+
+        pygame.mixer.music.fadeout(10)
+        pygame.mixer.music.load("src/sfx/music.ogg")
+        pygame.mixer.music.play(-1)
+
         self.player = Player(self)
         self.light = pygame.transform.scale(pygame.image.load("src/assets/light.png"), (100, 90))
         self.material = material
@@ -498,7 +510,6 @@ class Ocean(State):
         self.enemy_choices = {
             "blue": [Anglerfish, Eel, Anglerfish, Eel, Octo],
             "red": [Blob, Blob],
-
         }
 
         self.light_index = 0

@@ -56,7 +56,10 @@ class UI:
         self.app = app
         self.renderer = renderer
         self.computer_ui = pygame.image.load("src/assets/computer.png")
+        self.door_ui = pygame.image.load("src/assets/door.png")
+
         self.computer_texture = pygame._sdl2.Texture.from_surface(self.renderer, self.computer_ui)
+        self.door_texture = pygame._sdl2.Texture.from_surface(self.renderer, self.door_ui)
         
         self.click = AudioHandler.sounds['click']
         self.gps = AudioHandler.sounds['gps']
@@ -95,8 +98,11 @@ class UI:
                 self.surface.blit(resources, (5, 6 + text.get_height() * 1.5))
                 
                 for i, key in enumerate(self.app.needed_resources_stable.keys()):
-                    needed_resources = f"{key}: {self.app.needed_resources_stable[key]}\n"
-                    t = self.small_font.render(needed_resources, False, "white")
+                    needed_resources = f"{key}: {self.app.collected_materials[key]}/{self.app.needed_resources_stable[key]}\n"
+                    if self.app.collected_materials[key] >= self.app.needed_resources_stable[key]:
+                        t = self.small_font.render(needed_resources, False, "green")
+                    else:
+                        t = self.small_font.render(needed_resources, False, "white")
                     self.surface.blit(t, (5, 100 + i * t.get_height() * 3.5))
                     b = Button(self.app, "locate", pygame.Vector2(10, 100 + i * t.get_height() * 3.5 + 25))
                     b.material = key
@@ -113,12 +119,19 @@ class UI:
                     self.panel_x += 20
                 self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.surface), pygame.Rect(self.panel_x, 0, 800, 800))
         else:
-            text = self.font.render(f"Goal: Find {self.app.current_resource} ({self.app.collected_materials[self.app.state.material]}/{self.app.needed_resources_stable[self.app.state.material]})", False, (255, 255, 255))
-            rect = pygame.Rect(500, 400, text.get_width(), text.get_height())
-            rect.center = rect.topleft
-            rect.y = 760 - rect.height
-            self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), rect)
-            self.renderer.blit(self.computer_texture, self.computer_rect)
+            try:
+                if self.app.collected_materials[self.app.state.material] >= self.app.needed_resources_stable[self.app.state.material]:
+                    text = self.font.render(f"Goal: Find {self.app.current_resource} ({self.app.collected_materials[self.app.state.material]}/{self.app.needed_resources_stable[self.app.state.material]})", False, (0, 255, 0))
+                
+                else:
+                    text = self.font.render(f"Goal: Find {self.app.current_resource} ({self.app.collected_materials[self.app.state.material]}/{self.app.needed_resources_stable[self.app.state.material]})", False, (255, 255, 255))
+                rect = pygame.Rect(500, 400, text.get_width(), text.get_height())
+                rect.center = rect.topleft
+                rect.y = 760 - rect.height
+                self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), rect)
+            except Exception as e:
+                pass
+            self.renderer.blit(self.door_texture, self.computer_rect)
 
     def events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -138,5 +151,8 @@ class UI:
                     if self.computer_rect.collidepoint(mp):
                         self.click.play()
                         self.clicked = True
+                        pygame.mixer.fadeout(10)
+                        pygame.mixer.music.load("src/sfx/ambientspacemusic.mp3")
+                        pygame.mixer.music.play(-1)
                         self.app.crnt_state = "space"
                         self.app.state = self.app.states[self.app.crnt_state]

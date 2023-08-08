@@ -73,10 +73,11 @@ class Camera:
             rot_y = self.sensitivity * (mx - 500) / 500
 
             self.t += 1
-            new_orientation = glm.rotate(self.orientation, glm.radians(rot_x / 1), glm.normalize(glm.cross(self.orientation, self.up)))
 
+            new_orientation = glm.rotate(self.orientation, glm.radians(rot_x / 1), glm.normalize(glm.cross(self.orientation, self.up)))
             # if (abs(glm.angle(new_orientation, self.up) - glm.radians(90.0)) <= glm.radians(85.0)):
-            self.orientation = new_orientation
+            if new_orientation.y < 1 and new_orientation.y > -1:
+                self.orientation = new_orientation
 
             self.orientation = glm.rotate(self.orientation, glm.radians(rot_y / 1), self.up)
             

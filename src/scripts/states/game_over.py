@@ -83,7 +83,17 @@ class GameOver(State):
 
     def restart_space(self):
         # RESTART SPACE STATE
+        self.app.oceans = {}
+        self.app.collected_materials = {
+            "Aluminum": 0,
+            "Fiber": 0,
+            "Titanium": 0,
+            "Bronze": 0,
+            "Steel": 0,
+            "Silver": 0,
+        }
         app = self.app
+
         app.state.stop()
         app.crnt_state = 'space'
         app.state = app.states[app.crnt_state]
