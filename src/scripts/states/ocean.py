@@ -1,16 +1,10 @@
 from .state import State
 from src.scripts.entities.player import Player
-from src.scripts.entities.planet import Planet
-from src.scripts.entities.entity import Entity
-from src.scripts.entities.asteroid import Asteroid
-from src.scripts.particles import SpaceParticles
-from src.scripts.controller import Controller
 import math
 import time
 
 import pygame_shaders
 
-from copy import copy
 import random
 
 import opensimplex

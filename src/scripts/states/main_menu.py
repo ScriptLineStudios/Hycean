@@ -148,7 +148,7 @@ class Menu(State):
         starRect.width *= 0.3
         starRect.height *= 0.3
 
-        '''if self.anim_wait > 0:
+        if self.anim_wait > 0:
             self.anim_wait -= self.get_dt()
 
         for star in self.stars:
@@ -159,9 +159,9 @@ class Menu(State):
 
                 star[0] += difference * 0.075
 
-            star[3].draw(srcrect=None, dstrect=starRect)'''
+            star[3].draw(srcrect=None, dstrect=starRect)
 
-        self.logo.draw(srcrect=None, dstrect=self.logo_rect)
+        #self.logo.draw(srcrect=None, dstrect=self.logo_rect)
         #self.renderer.blit(self.to_texture(self.logo), pygame.Rect(75, 10, 1111 / 1.3, 248 / 1.3))
 
         if self.scale_anim:
