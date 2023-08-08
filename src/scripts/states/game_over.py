@@ -24,6 +24,9 @@ class GameOver(State):
         self.game_over = self.to_texture(self.game_over)
         self.game_over_rect = self.game_over.get_rect(center = (500, 130))
         
+        self.ocean = False
+        self.ocean_surface = None
+
         self.restartText = self.font.render(
             'Press R to Restart, Captain!', 
             False, (255, 0, 0)
@@ -50,9 +53,10 @@ class GameOver(State):
         self.texture.draw()
 
         self.game_over.draw(srcrect=None, dstrect=self.game_over_rect)
-        self.asteroid_render.draw(srcrect=None, dstrect=self.asteroid_rect)
 
-        self.randomRender.draw(srcrect=None, dstrect=self.rndRenderRect)
+        if not self.ocean:
+            self.asteroid_render.draw(srcrect=None, dstrect=self.asteroid_rect)
+            self.randomRender.draw(srcrect=None, dstrect=self.rndRenderRect)
 
         if self.RestartAnim:
             if self.scale < self.maxScale: 
@@ -93,12 +97,16 @@ class GameOver(State):
 
     def update_screen(self):
         # RESTARTS GAME OVER SCREEN
-        self.surface = self.renderer.to_surface()
+        if not self.ocean:
+            self.surface = self.renderer.to_surface()
+        else:
+            self.surface = self.ocean_surface
+
         self.surface = pygame.transform.gaussian_blur(self.surface, 4)
         self.surface = pygame.transform.grayscale(self.surface)
 
         self.texture = self.to_texture(self.surface)
-
+        
         self.asteroid_name = f'{choice(ascii_letters).upper()}-{randint(100, 999)}'
         self.asteroid_text = f'Asteroid {self.asteroid_name} Hit Your Ship'
         self.asteroid_render = self.font.render(self.asteroid_text, False, (160, 130, 0))

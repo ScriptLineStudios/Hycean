@@ -60,7 +60,7 @@ class App:
             'victory': Victory(self, self.renderer)
         }
 
-        self.crnt_state = 'space'
+        self.crnt_state = 'ocean'
         self.state = self.states[self.crnt_state]
         self.state.start()
 
