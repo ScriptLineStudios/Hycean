@@ -29,6 +29,8 @@ class Menu(State):
         self.title = titleFont.render('HYCEAN', False, (255, 255, 255))
         self.titleRect = self.title.get_rect(center=(500, 130))
 
+        self.logo = pygame.image.load("src/assets/logo.png")
+
         self.play_text = font.render('PLAY!', False, (100, 100, 100))
         self.play_text = self.to_texture(self.play_text)
         self.play_text_green = font.render('PLAY!', False, (0, 255, 0))
@@ -128,10 +130,12 @@ class Menu(State):
         starRect = self.stars[0][3].get_rect()
         starRect.width *= 0.3
         starRect.height *= 0.3
-        for star in self.stars:
-            starRect.center = star[0]
+        # for star in self.stars:
+        #     starRect.center = star[0]
             
-            star[3].draw(srcrect=None, dstrect=starRect)
+        #     star[3].draw(srcrect=None, dstrect=starRect)
+
+        self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.logo), pygame.Rect(75, 10, 1111 / 1.3, 248 / 1.3))
 
         if self.scale_anim:
             if self.scale < self.maxScale: 
