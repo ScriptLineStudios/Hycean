@@ -8,8 +8,6 @@ from src.scripts.states import *
 from src.scripts.ui import *
 from src.scripts.mouse import Mouse
 
-import pygame_shaders
-
 pygame.init()
 
 
@@ -60,7 +58,7 @@ class App:
             'victory': Victory(self, self.renderer)
         }
 
-        self.crnt_state = 'space'
+        self.crnt_state = 'ocean'
         self.state = self.states[self.crnt_state]
         self.state.start()
 

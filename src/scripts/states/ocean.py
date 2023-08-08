@@ -5,8 +5,6 @@ import time
 
 from src.scripts.audio_handler import AudioHandler
 
-import pygame_shaders
-
 import random
 
 import opensimplex
@@ -208,6 +206,8 @@ class Missle:
         self.angle = ((180 / math.pi) * -angle)
         self.cached_particle_surfaces = {}
 
+        self.life_time = 500
+
         size = 7
         if (size, size) not in self.cached_particle_surfaces.keys():
             surf = pygame.Surface((size, size))
@@ -224,6 +224,7 @@ class Missle:
         return rotated_image, new_rect
 
     def update(self):
+        self.life_time -= 1
         self.position += self.direction * self.speed
         # img, rect = self.rot_center(self.missile, self.angle, *(self.position - self.scene.camera))
         self.scene.surface.blit(pygame.transform.rotate(self.missile, self.angle), self.position - self.scene.camera)
@@ -453,6 +454,9 @@ class Ocean(State):
         self.potential_positions = []
         self.generate_chunks()
 
+        self.missile_timer = 5
+        self.crnt_timer = 0
+
         self.safety = False
         self.ticks = 0
 
@@ -560,6 +564,8 @@ class Ocean(State):
                 self.enemies.remove(enemy)
             enemy.update()
 
+        
+        self.crnt_timer += 1
 
         self.splash_speed = max(self.splash_speed - 0.0001, 0.003)
 
@@ -598,14 +604,17 @@ class Ocean(State):
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                AudioHandler.sounds["missile"].set_volume(100.3)
-                AudioHandler.sounds["missile"].play()
-                mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
-                player = pygame.Vector2(self.player.rect.x - self.camera.x, self.player.rect.y - self.camera.y)
-                direction = (mp - player)
-                self.missiles.append(Missle(self, player + self.camera, direction.normalize(), math.atan2(direction.y, direction.x)))
-                self.screen_shake = 20
-                self.time += 0.5
-                self.splash_speed += 0.009
-
-    
+                self.missle_count = len(self.missiles)
+                if self.crnt_timer >= self.missile_timer:
+                    AudioHandler.sounds["missile"].set_volume(100.3)
+                    AudioHandler.sounds["missile"].play()
+                    mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
+                    player = pygame.Vector2(self.player.rect.x - self.camera.x, self.player.rect.y - self.camera.y)
+                    direction = (mp - player)
+                    self.missiles.append(Missle(self, player + self.camera, direction.normalize(), math.atan2(direction.y, direction.x)))
+                    self.screen_shake = 20
+                    self.time += 0.5
+                    self.splash_speed += 0.009
+                    
+                    self.crnt_timer = 0
+        
