@@ -33,12 +33,24 @@ class App:
             "Silver": 20,
         }
 
+        self.collected_materials = {
+            "Aluminum": 0,
+            "Fiber": 0,
+            "Titanium": 0,
+            "Bronze": 0,
+            "Steel": 0,
+            "Silver": 0,
+        }
+
         self.ScreenSize = (1000, 800)
-        caption = 'Hycean - Space'
+        caption = 'Hycean'
+
+        self.current_resource = "Aluminum"
         
-        self.window = pygame._sdl2.Window(caption, self.ScreenSize, borderless=False, opengl=False)
+        self.window = pygame._sdl2.Window(caption, self.ScreenSize, borderless=False, opengl=False, fullscreen=False)
         self.renderer = pygame._sdl2.Renderer(self.window)
 
+        self.oceans = {}
 
         self.states = {
             'main_menu': Menu(self, self.renderer),
@@ -48,7 +60,7 @@ class App:
             'victory': Victory(self, self.renderer)
         }
 
-        self.crnt_state = 'main_menu'
+        self.crnt_state = 'space'
         self.state = self.states[self.crnt_state]
         self.state.start()
 
@@ -86,3 +98,4 @@ class App:
                 self.ui.render()
 
             renderer.present()
+            self.window.title = str(self.clock.get_fps())

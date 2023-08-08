@@ -3,6 +3,8 @@ from src.scripts.entities.player import Player
 import math
 import time
 
+from src.scripts.audio_handler import AudioHandler
+
 import pygame_shaders
 
 import random
@@ -44,7 +46,7 @@ class EnemyBullet:
         self.scene.lighting.blit(self.cache, self.position - self.scene.camera + pygame.Vector2(-5, -4), special_flags=pygame.BLEND_RGBA_ADD)
 
         self.position += self.direction * 2
-        self.scene.surface.blit(pygame.transform.scale(self.image, (size, size)), self.position - self.scene.camera)
+        self.scene.surface.blit(self.image, self.position - self.scene.camera)
 
 class Enemy:
     def __init__(self, scene, position, shader, images):
@@ -58,6 +60,7 @@ class Enemy:
         self.cooldown = 0
         self.direction = pygame.Vector2(0, 0)
         self.flipped_y = False
+        self.death_rotation = 0
 
     @staticmethod
     #Kindly borrowed from https://github.com/pygame-community/pygame-ce/issues/1847#issuecomment-1445321115
@@ -67,6 +70,7 @@ class Enemy:
 
     def take_damage(self, damage, missile):
         self.health -= damage
+        AudioHandler.sounds["hurt"].play()
         sx, sy = self.images[self.index // 8].get_size()
         for x in range(20):
             subsurf = self.images[self.index // 8].subsurface(random.randrange(0, sx - 5), random.randrange(0, sy - 5), 4, 4)
@@ -75,6 +79,9 @@ class Enemy:
         for i, image in enumerate(self.images):
             self.images[i] = self.solid_overlay(image)
         self.direction = missile.direction
+
+        if random.randrange(0, 5) == 2:
+            self.scene.particles.append(Material(self.scene.material, self.scene, self.position.copy(), -pygame.Vector2(self.direction.x + random.normalvariate(0, 0.3), self.direction.y + random.normalvariate(0, 0.3)), None))
 
     def update(self):
         if self.cooldown > 0:
@@ -86,7 +93,7 @@ class Enemy:
         self.index += 1
         if self.index > len(self.images) * 8 - 1: 
             self.index = 0
-        self.scene.surface.blit(pygame.transform.flip(self.images[self.index // 8], bool(self.position.x < self.scene.player.position.x), self.flipped_y), self.position - self.scene.camera)
+        self.scene.surface.blit(pygame.transform.flip(self.images[self.index // 8], bool(self.position.x < self.scene.player.position.x), self.flipped_y), self.position - self.scene.camera)        
 
 class Octo(Enemy):
     def __init__(self, scene, position):
@@ -155,7 +162,7 @@ class Anglerfish(Enemy):
 
         self.position -= self.reverse * direction * self.speed
 
-        self.scene.lighting.blit(self.s, self.position - self.scene.camera + pygame.Vector2(-25, -25), special_flags=pygame.BLEND_RGBA_ADD)
+        self.scene.lighting.blit(self.s, self.position - self.scene.camera + pygame.Vector2(-37, -37), special_flags=pygame.BLEND_RGBA_ADD)
 
         super().update()
 
@@ -238,12 +245,23 @@ class Tile:
         for missile in missiles:
             if self.rect.colliderect(pygame.Rect(missile.position.x, missile.position.y, 16, 16)):
                 missiles.remove(missile)
+                self.scene.explosion.set_volume(0.3)
+                self.scene.explosion.play()
+
+                sx, sy = self.surface.get_size()
+                for i in range(random.randrange(20, 40)):
+                    subsurf = self.surface.subsurface(random.randrange(0, sx - 5), random.randrange(0, sy - 5), 4, 4)
+                    self.scene.particles.append(Particle(self.scene, pygame.Vector2(self.position.x + 16, self.position.y + 16), -pygame.Vector2(missile.direction.x + random.normalvariate(0, 0.1), missile.direction.y + random.normalvariate(0, 0.1)) * random.randrange(1, 4), pygame.transform.scale(subsurf, (2, 2))))
+                
+                # self.scene.circles.append([pygame.Vector2(self.position.x + 16, self.position.y + 16), 5])
+
                 if self.material:
                     self.remove = True
                     sx, sy = self.surface.get_size()
+
                     for x in range(random.randrange(1, 4)):
                         subsurf = self.surface.subsurface(random.randrange(0, sx - 5), random.randrange(0, sy - 5), 4, 4)
-                        print(self.scene.material)
+
                         self.scene.particles.append(Material(self.scene.material, self.scene, self.position.copy(), pygame.Vector2(missile.direction.x + random.normalvariate(0, 0.3), missile.direction.y + random.normalvariate(0, 0.3)), subsurf))
 
         self.scene.surface.blit(self.surface, self.position - self.scene.camera)
@@ -254,7 +272,8 @@ class Particle:
         self.position = position
         self.veclocity = veclocity
         self.surface = surface
-        self.lifetime = 100
+        self.lifetime = random.normalvariate(100, 10)
+        self.remove = False
 
     def update(self):
         self.lifetime -= 1
@@ -272,6 +291,13 @@ class Material(Particle):
         self.rotation += 1
         self.position -= self.veclocity
         self.scene.surface.blit(pygame.transform.rotate(self.image, self.rotation), self.position - self.scene.camera)
+
+        if pygame.Rect(*self.position, 16, 16).colliderect(self.scene.player.rect):
+            # self.scene.app.needed_resources_stable[self.scene.material] -= 1
+            self.scene.app.collected_materials[self.scene.material] += 1
+            self.remove = True
+            AudioHandler.sounds["pickup"].set_volume(0.2)
+            AudioHandler.sounds["pickup"].play()
 
 class Player:
     def __init__(self, scene):
@@ -384,6 +410,8 @@ class Ocean(State):
             "green": (40, 200, 60, 255)
         }
 
+        self.explosion = AudioHandler.sounds['explosion']
+
         self.resources = [
             "Aluminum",
             "Fiber",
@@ -419,6 +447,7 @@ class Ocean(State):
         self.enemies = [Octo(self, pygame.Vector2(10, 10)), Anglerfish(self, pygame.Vector2(-10, 10))]
 
         self.enemy_bullets = []
+        self.circles = []
 
         self.chest_spawned = False
         self.potential_positions = []
@@ -487,25 +516,29 @@ class Ocean(State):
                             if block.remove:
                                 self.chunks[(x + cx, y + cy)].remove(block)
                                 removal = True
-                            # elif removal:
-                                # if random.randrange(0, 10) < 5:
-                                # self.chunks[(x + cx, y + cy)].remove(block)
 
                 except KeyError:
                     pass
 
-        if random.randrange(0, 2200) < 10:
-            print("Spawning enemies")
+        if random.randrange(0, 4000) < 10:
             self.enemies.append(random.choice(self.enemy_choices[self.color])(self, self.player.position + pygame.Vector2(random.randrange(-400, 400), random.randrange(-400, 400))))
 
         mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
-        pygame.draw.circle(self.surface, (255, 0, 0), mp, 3)
 
         for particle in self.particles:
             if particle.lifetime > 0:
                 particle.update()
             else:
                 self.particles.remove(particle)
+
+            if particle.remove:
+                self.particles.remove(particle)
+
+        for circle in self.circles:
+            circle[1] += 10
+            if circle[1] > 25:
+                self.circles.remove(circle)
+            pygame.draw.circle(self.surface, (255, 255, 255), (circle[0].x, circle[0].y) - self.camera, circle[1])
 
         for missile in self.missiles:
             missile.update()
@@ -523,6 +556,8 @@ class Ocean(State):
                 if rect.colliderect(enemy_rect):
                     enemy.take_damage(15, missile)
                     self.missiles.remove(missile)
+            if enemy.health <= 0:
+                self.enemies.remove(enemy)
             enemy.update()
 
 
@@ -563,6 +598,8 @@ class Ocean(State):
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
+                AudioHandler.sounds["missile"].set_volume(100.3)
+                AudioHandler.sounds["missile"].play()
                 mp = pygame.Vector2(pygame.mouse.get_pos()) / 2
                 player = pygame.Vector2(self.player.rect.x - self.camera.x, self.player.rect.y - self.camera.y)
                 direction = (mp - player)

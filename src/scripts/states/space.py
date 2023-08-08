@@ -273,10 +273,16 @@ class Space(State):
             self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.cutscene_surface), pygame.Rect(0, 0, 1000, 800))
 
         if self.cutscene_complete:
-            ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type, material=self.LandIndicator.planet.primary_material[0])
+            ocean = None
+            if not (ocean := self.app.oceans.get(self.LandIndicator.planet.primary_material[0], False)):
+                ocean = Ocean(self.app, self.renderer, color=self.LandIndicator.planet.type, material=self.LandIndicator.planet.primary_material[0])
+                self.app.oceans[self.LandIndicator.planet.primary_material[0]] = ocean
+
             self.app.states[f"ocean_{self.LandIndicator.planet.id}"] = ocean
             self.app.crnt_state = f"ocean_{self.LandIndicator.planet.id}"
             
+            self.app.current_resource = self.LandIndicator.planet.primary_material[0]
+
             self.cutscene = False
             self.cutscene_surface = pygame.Surface((500, 400), pygame.SRCALPHA)
             self.cutscene_surface.fill((0, 0, 0, 0))
@@ -304,6 +310,10 @@ class Space(State):
                 if self.LandIndicator.planet is not None:
                     print(f"Its cutscene time {self.LandIndicator.planet}")
                     self.cutscene = True
+                    self.camera.hidden = False
+
+                    pygame.mouse.set_visible(True)
+                    
                     self.land_sound.play()
                     for obstacle in self.obstacles[:]:
                         if type(obstacle) == Asteroid:

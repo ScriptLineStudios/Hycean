@@ -7,5 +7,9 @@
     "play": "play.wav",
     "success": "success.wav",
     "gps": "gps.wav",
-    "land": "land.wav"
+    "land": "land.wav",
+    "explosion": "explosion.wav",
+    "missile": "missile.wav",
+    "hurt": "hurt.wav",
+    "pickup": "pickup.wav"
 }

@@ -10,6 +10,7 @@ class AudioHandler:
     with open('src/sfx/sounds.json') as file:
         data = load(file)
         for path in data:
+            print(path)
             sounds[path] = pygame.mixer.Sound(f'src/sfx/{data[path]}')
 
     @classmethod

@@ -113,6 +113,11 @@ class UI:
                     self.panel_x += 20
                 self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.surface), pygame.Rect(self.panel_x, 0, 800, 800))
         else:
+            text = self.font.render(f"Goal: Find {self.app.current_resource} ({self.app.collected_materials[self.app.state.material]}/{self.app.needed_resources_stable[self.app.state.material]})", False, (255, 255, 255))
+            rect = pygame.Rect(500, 400, text.get_width(), text.get_height())
+            rect.center = rect.topleft
+            rect.y = 760 - rect.height
+            self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), rect)
             self.renderer.blit(self.computer_texture, self.computer_rect)
 
     def events(self, event):
