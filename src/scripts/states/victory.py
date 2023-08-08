@@ -73,10 +73,9 @@ class Victory(State):
         self.title.draw(srcrect=None, dstrect=self.titleRect)
 
         self.congrats.draw(srcrect=None, dstrect=self.congratsRect)
-        self.playtimeText.draw(srcrect=None, dstrect=self.playtimeRect)
-        self.clickedText.draw(srcrect=None, dstrect=self.clickedRect)
-        self.mouseText.draw(srcrect=None, dstrect=self.mouseRect)
-
+        # self.playtimeText.draw(srcrect=None, dstrect=self.playtimeRect)
+        # self.clickedText.draw(srcrect=None, dstrect=self.clickedRect)
+        # self.mouseText.draw(srcrect=None, dstrect=self.mouseRect)
 
     def handle_event(self, event):
         if event.type == MOUSEMOTION:

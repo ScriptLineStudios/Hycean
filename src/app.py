@@ -32,12 +32,12 @@ class App:
         }
 
         self.collected_materials = {
-            "Aluminum": 100,
-            "Fiber": 40,
-            "Titanium": 70,
-            "Bronze": 60,
-            "Steel": 15,
-            "Silver": 20,
+            "Aluminum": 0,
+            "Fiber": 0,
+            "Titanium": 0,
+            "Bronze": 0,
+            "Steel": 0,
+            "Silver": 0,
         }
 
         self.ScreenSize = (1000, 800)
@@ -58,7 +58,7 @@ class App:
             'victory': Victory(self, self.renderer)
         }
 
-        self.crnt_state = 'space'
+        self.crnt_state = 'main_menu'
         self.state = self.states[self.crnt_state]
         self.state.start()
 
@@ -126,4 +126,3 @@ class App:
                     self.state = self.states[self.crnt_state]
 
             renderer.present()
-            self.window.title = str(self.clock.get_fps())
