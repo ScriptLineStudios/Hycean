@@ -4,6 +4,8 @@
     "volume_feedback": "volume_feedback.wav",
     "restart": "restart.wav",
     "click": "click.wav",
+    "play": "play.wav",
     "success": "success.wav",
-    "gps": "gps.wav"
+    "gps": "gps.wav",
+    "land": "land.wav"
 }

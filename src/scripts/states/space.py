@@ -30,14 +30,14 @@ class Space(State):
 
         self.ScreenSize = (1000, 800)
 
-        self.music = pygame.mixer.music.load("src/assets/sound/ambientspacemusic.mp3")
+        self.music = pygame.mixer.music.load("src/sfx/ambientspacemusic.mp3")
         pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play(-1)
 
         self.engine_sound = AudioHandler.sounds['engine']
         self.engine_sound.set_volume(0.4)
 
-        self.land_sound = pygame.mixer.Sound("src/assets/sound/land.wav")
+        self.land_sound = AudioHandler.sounds['land']
         self.land_sound.set_volume(0.4)
         #put actual here
 
@@ -144,17 +144,18 @@ class Space(State):
             self.JetFlame.add_particle(playerPos)
 
         self.player.update(playerPos)
+        
+        if self.Tutorial.finished:
+            if random.randrange(0, 200) == 4:
+                print("asteroid")
+                x, y = random.randrange(15, 30), 0
+                asteroid = Asteroid(self)
+                asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.z - glm.normalize(self.camera.orientation).z * x)
+                direction = glm.normalize(asteroid.position - self.camera.position)
+                asteroid.direction = -direction / 10
 
-        if random.randrange(0, 200) == 4:
-            print("asteroid")
-            x, y = random.randrange(15, 30), 0
-            asteroid = Asteroid(self)
-            asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.z - glm.normalize(self.camera.orientation).z * x)
-            direction = glm.normalize(asteroid.position - self.camera.position)
-            asteroid.direction = -direction / 10
-
-            self.obstacles.append(asteroid)
-            self.model_renderer.add_model(asteroid)
+                self.obstacles.append(asteroid)
+                self.model_renderer.add_model(asteroid)
 
         self.player.rot_x += -self.player.rot_x / 50
         self.player.rot_z += -self.player.rot_z / 50

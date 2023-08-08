@@ -44,8 +44,6 @@ class GameOver(State):
         
         self.first_time = True
 
-        self.controls = self.to_texture(pygame.image.load('src/assets/controls.png'))
-
         self.update_screen()
 
     def render(self):

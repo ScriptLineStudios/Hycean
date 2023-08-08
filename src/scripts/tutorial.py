@@ -11,8 +11,6 @@ class Tutorial:
 
         self.font = pygame.font.Font('src/assets/yoster.ttf', 32)
 
-        self.center_position = (500, 700)
-
         self.regular = (255, 255, 255)
         self.done = (0, 255, 0)
         
@@ -35,7 +33,7 @@ class Tutorial:
 
         self.mp = pygame.Vector2(500, 400)
         self.total_motion = 0
-        self.done_movement = 10000
+        self.done_movement = 8000
 
         for text in self.texts:
             self.renderRegular.append(
@@ -50,7 +48,7 @@ class Tutorial:
 
         self.crnt_text = self.renderRegular[self.crnt_task]
         self.crnt_text_done = self.renderDone[self.crnt_task]
-        self.text_rect = self.crnt_text.get_rect(center=self.center_position)
+        self.text_rect = self.crnt_text.get_rect(center=(500, 700))
 
         self.finished = False
 

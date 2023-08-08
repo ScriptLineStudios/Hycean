@@ -31,7 +31,11 @@ class Menu(State):
         self.titleRect = self.title.get_rect(center=(500, 130))
 
         self.logo = pygame.image.load("src/assets/logo.png")
-
+        self.logo = self.to_texture(self.logo)
+        self.logo_rect = self.logo.get_rect()
+        self.logo_rect.width *= 0.8
+        self.logo_rect.height *= 0.8
+        self.logo_rect.center = (500, 100)
         self.play_text = font.render('PLAY!', False, (100, 100, 100))
         self.play_text = self.to_texture(self.play_text)
         self.play_text_green = font.render('PLAY!', False, (0, 255, 0))
@@ -56,6 +60,8 @@ class Menu(State):
         self.scale_audio = 1.0
         self.maxScaleAudio = 1.15
         self.speedAudio = 0.05
+
+        self.anim_wait = 0.25 #seconds
 
         titleMask = pygame.mask.from_surface(self.title)
         self.bebra = self.to_texture(titleMask.to_surface())
@@ -85,7 +91,10 @@ class Menu(State):
                     position[0] + self.titleRect.left,
                     position[1] + self.titleRect.top
                 ]
-                self.stars.append([centerPos, centerPos, velocity, choice(starTextures)])
+                random_pos = pygame.Vector2(
+                    randint(0, 1000), randint(0, 800)
+                )
+                self.stars.append([random_pos, centerPos, velocity, choice(starTextures)])
 
         self.volume = 0.5
 
@@ -103,6 +112,8 @@ class Menu(State):
 
         self.feedback_sound = AudioHandler.sounds['volume_feedback']
 
+        self.play_sound = AudioHandler.sounds['play']
+
         #indicate when game run
         #self.play_sound = pygame.mixer.Sound()
 
@@ -119,6 +130,14 @@ class Menu(State):
         app.crnt_state = 'space'
         app.state = app.states[app.crnt_state]
 
+    def get_dt(self):
+        fps = self.app.clock.get_fps()
+
+        if fps == 0:
+            return 0
+        
+        return 1 / fps
+
     def render(self):
         self.renderer.draw_color = (0, 0, 0, 255)
         self.renderer.clear()
@@ -128,12 +147,22 @@ class Menu(State):
         starRect = self.stars[0][3].get_rect()
         starRect.width *= 0.3
         starRect.height *= 0.3
-        # for star in self.stars:
-        #     starRect.center = star[0]
-            
-        #     star[3].draw(srcrect=None, dstrect=starRect)
 
-        self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.logo), pygame.Rect(75, 10, 1111 / 1.3, 248 / 1.3))
+        '''if self.anim_wait > 0:
+            self.anim_wait -= self.get_dt()
+
+        for star in self.stars:
+            starRect.center = star[0]
+
+            if self.anim_wait < 0:
+                difference = star[1] - star[0]
+
+                star[0] += difference * 0.075
+
+            star[3].draw(srcrect=None, dstrect=starRect)'''
+
+        self.logo.draw(srcrect=None, dstrect=self.logo_rect)
+        #self.renderer.blit(self.to_texture(self.logo), pygame.Rect(75, 10, 1111 / 1.3, 248 / 1.3))
 
         if self.scale_anim:
             if self.scale < self.maxScale: 
@@ -205,9 +234,9 @@ class Menu(State):
     def handle_event(self, event):
         if event.type == KEYDOWN:
             if event.key in [K_SPACE, K_RETURN]:
+                self.play_sound.play()
                 self.scale_anim = True
                 self.switch = True
-                print('to the space!')
 
             if event.key == K_a:
                 self.scale_anim_audio = True
@@ -219,12 +248,17 @@ class Menu(State):
                 self.update_volume(0.1)
                 self.feedback_sound.play()
 
+            if event.key == K_ESCAPE:
+                pygame.quit()
+                raise SystemExit
+
         if event.type == MOUSEMOTION:
             self.mp = event.pos
                     
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 if Mouse.hovered:
+                    self.play_sound.play()
                     self.scale_anim = True
                     self.switch = True
                     
