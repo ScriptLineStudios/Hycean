@@ -8,8 +8,6 @@ from src.scripts.states import *
 from src.scripts.ui import *
 from src.scripts.mouse import Mouse
 
-import pygame_shaders
-
 pygame.init()
 
 
