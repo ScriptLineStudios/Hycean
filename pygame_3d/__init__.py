@@ -217,12 +217,12 @@ class Model:
 
     @staticmethod
     #commented for now so it's faster to debug
-    # @jit(nopython=True, fastmath=True, nogil=True)
+    @jit(nopython=True, fastmath=True, nogil=True)
     def screen(v):
         return np.column_stack((((v[:, 0] + 1) / 2) * 1000, (1 - (v[:, 1] + 1) / 2) * 800))
 
     @staticmethod
-    # @jit(nopython=True, fastmath=True, nogil=True)
+    @jit(nopython=True, fastmath=True, nogil=True)
     def three_to_two(v):
         return np.column_stack(((v[:, 0] / (v[:, 2] + 1)), (v[:, 1] / (v[:, 2] + 1))))
 

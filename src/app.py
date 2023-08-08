@@ -32,12 +32,12 @@ class App:
         }
 
         self.collected_materials = {
-            "Aluminum": 0,
-            "Fiber": 0,
-            "Titanium": 0,
-            "Bronze": 0,
-            "Steel": 0,
-            "Silver": 0,
+            "Aluminum": 100,
+            "Fiber": 40,
+            "Titanium": 70,
+            "Bronze": 60,
+            "Steel": 15,
+            "Silver": 20,
         }
 
         self.ScreenSize = (1000, 800)
@@ -68,11 +68,15 @@ class App:
 
         self.clock = pygame.time.Clock()
         self.fps = 60
-
+        self.end_cutscene = False
+        self.cutscene_surface = pygame.Surface((1000, 800), pygame.SRCALPHA)
+        self.radius = 1
+        
     def run(self):
         renderer = self.state.renderer
         while True:
             self.clock.tick(self.fps)
+
 
             for event in pygame.event.get():
                 self.state.handle_event(event)
@@ -84,6 +88,20 @@ class App:
                     pygame.quit()
                     raise SystemExit
 
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.ui.computer_active = False
+                        self.state = self.states[self.crnt_state]
+
+            end = True
+            for key in self.collected_materials.keys():
+                if self.collected_materials[key] < self.needed_resources_stable[key]:
+                    end = False
+
+            if end:
+                self.end_cutscene = True
+
+
             self.state.update()
             Mouse.update()
 
@@ -94,6 +112,18 @@ class App:
 
             if not self.crnt_state in ["game_over", "main_menu", "victory"]:
                 self.ui.render()
+
+            if self.end_cutscene and self.crnt_state != "victory":
+                self.cutscene_surface.fill((0, 0, 0, 0))
+                self.radius += 10
+                pygame.draw.circle(self.cutscene_surface, (255, 255, 255, 255), (1000 // 2, 800 //2), self.radius)
+                renderer.blit(pygame._sdl2.Texture.from_surface(renderer, self.cutscene_surface), pygame.Rect(0, 0, 1000, 800))
+                if self.radius >= 600:
+                    pygame.mixer.stop()
+                    AudioHandler.sounds["victory"].play()
+                    self.end_cutscene = False
+                    self.crnt_state = "victory"
+                    self.state = self.states[self.crnt_state]
 
             renderer.present()
             self.window.title = str(self.clock.get_fps())

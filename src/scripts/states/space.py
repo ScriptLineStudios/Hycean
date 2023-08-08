@@ -146,7 +146,7 @@ class Space(State):
         
         if self.Tutorial.finished:
             if random.randrange(0, 200) == 4:
-                print("asteroid")
+                #print("asteroid")
                 x, y = random.randrange(15, 30), 0
                 asteroid = Asteroid(self)
                 asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.z - glm.normalize(self.camera.orientation).z * x)
@@ -312,7 +312,7 @@ class Space(State):
 
             if event.key == K_RETURN:
                 if self.LandIndicator.planet is not None:
-                    print(f"Its cutscene time {self.LandIndicator.planet}")
+                    #print(f"Its cutscene time {self.LandIndicator.planet}")
                     self.cutscene = True
                     self.camera.hidden = False
 

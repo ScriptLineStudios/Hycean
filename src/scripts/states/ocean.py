@@ -238,7 +238,7 @@ class Eel(Enemy):
 
 class Missle:
     def __init__(self, scene, position, direction, angle):
-        print(direction)
+        #print(direction)
         self.scene = scene
         self.position = position
         self.direction = direction
@@ -444,6 +444,7 @@ class Player:
 class Ocean(State):
     def __init__(self, *args, material, color="blue", **kwargs):
         super().__init__(*args, **kwargs)
+        opensimplex.seed(int(time.time()))
 
         pygame.mixer.music.fadeout(10)
         pygame.mixer.music.load("src/sfx/music.ogg")
@@ -528,19 +529,20 @@ class Ocean(State):
         for chunk_x in range(-8, 8):
             for chunk_y in range(-8, 8):
                 chunk = []
-                for x in range(16):
-                    for y in range(16):
-                        col = opensimplex.noise2((x + chunk_x * 16) / 20, (y + chunk_y * 16) / 20)
-                        if col > 0.3:
-                            if self.material:
-                                ore = opensimplex.noise2(((x + 398479237) + chunk_x * 16) / 20, ((y + 984798327) + chunk_y * 16) / 20)
-                                if ore > 0.1:
-                                    chunk.append(Tile(self, self.materials[self.material], pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16), material=self.material))
-                            
+                if chunk_x != 0 and chunk_y != 0:
+                    for x in range(16):
+                        for y in range(16):
+                            col = opensimplex.noise2((x + chunk_x * 16) / 20, (y + chunk_y * 16) / 20)
+                            if col > 0.3:
+                                if self.material:
+                                    ore = opensimplex.noise2(((x + 398479237) + chunk_x * 16) / 20, ((y + 984798327) + chunk_y * 16) / 20)
+                                    if ore > 0.1:
+                                        chunk.append(Tile(self, self.materials[self.material], pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16), material=self.material))
+                                
+                                    else:
+                                        chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
                                 else:
                                     chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
-                            else:
-                                chunk.append(Tile(self, self.rock, pygame.Vector2((x + chunk_x * 16) * 16, (y + chunk_y * 16) * 16)))
 
                 self.chunks[(chunk_x, chunk_y)] = chunk
 

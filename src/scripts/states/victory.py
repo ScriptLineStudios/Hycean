@@ -37,19 +37,23 @@ class Victory(State):
         )
 
     def render_text(self):
+        self.congrats = self.font.render(f"You collected enough material to \nreturn to your spacecraft!", False, self.grey)
+        self.congrats = self.to_texture(self.congrats)
+        self.congratsRect = self.congrats.get_rect(topleft=(50, 150))
+
         self.playtimeText = self.font.render(f'Your playtime: {self.play_time // 60} minutes', False, self.grey)
         self.playtimeText = self.to_texture(self.playtimeText)
-        self.playtimeRect = self.playtimeText.get_rect(topleft=(50, 150))
+        self.playtimeRect = self.playtimeText.get_rect(topleft=(50, 150+75+30))
 
         self.clickedText = self.font.render(f'You have clicked {self.clicked} times', False, self.grey)
         self.clickedText = self.to_texture(self.clickedText)
-        self.clickedRect = self.clickedText.get_rect(topleft=(50, 225))
+        self.clickedRect = self.clickedText.get_rect(topleft=(50, 150+75*2 +30))
 
         movement = self.mouse_movement // 100 # cm
         movement //= 100 # meters
         self.mouseText = self.font.render(f'You moved your mouse {self.mouse_movement} meters', False, self.grey)
         self.mouseText = self.to_texture(self.mouseText)
-        self.mouseRect = self.mouseText.get_rect(topleft=(50, 300))
+        self.mouseRect = self.mouseText.get_rect(topleft=(50, 150 + 75 * 3 + 30))
 
     def update_time(self):
         self.play_time += self.get_dt()
@@ -68,9 +72,11 @@ class Victory(State):
 
         self.title.draw(srcrect=None, dstrect=self.titleRect)
 
+        self.congrats.draw(srcrect=None, dstrect=self.congratsRect)
         self.playtimeText.draw(srcrect=None, dstrect=self.playtimeRect)
         self.clickedText.draw(srcrect=None, dstrect=self.clickedRect)
         self.mouseText.draw(srcrect=None, dstrect=self.mouseRect)
+
 
     def handle_event(self, event):
         if event.type == MOUSEMOTION:
