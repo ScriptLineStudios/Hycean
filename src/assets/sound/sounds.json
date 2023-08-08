@@ -4,5 +4,6 @@
     "volume_feedback": "volume_feedback.wav",
     "restart": "restart.wav",
     "click": "click.wav",
+    "success": "success.wav",
     "gps": "gps.wav"
 }

@@ -6,6 +6,7 @@ import pygame
 from pygame.locals import *
 from pygame._sdl2 import Texture
 from src.scripts.audio_handler import AudioHandler
+from src.scripts.mouse import Mouse
 
 pygame.font.init()
 
@@ -42,7 +43,6 @@ class Menu(State):
         self.press_rect.bottom = self.play_rect.top
 
         self.mp = (0, 0)
-        self.hovered = False
 
         self.switch = False
         self.scale_anim = False
@@ -117,8 +117,6 @@ class Menu(State):
         app.crnt_state = 'space'
         app.state = app.states[app.crnt_state]
 
-        pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
-
     def render(self):
         self.renderer.draw_color = (0, 0, 0, 255)
         self.renderer.clear()
@@ -163,14 +161,11 @@ class Menu(State):
         self.press_rect.bottom = scaledPlay.top
 
         self.play_text.draw(srcrect=None, dstrect=scaledPlay)
+        
         if scaledPlay.collidepoint(self.mp):
             self.play_text_green.draw(srcrect=None, dstrect=scaledPlay)
-            pygame.mouse.set_cursor(SYSTEM_CURSOR_HAND)
-            self.hovered = True
-        else:
-            self.hovered = False
-            pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
-
+            Mouse.hovered = True
+        
         self.press_space.draw(srcrect=None, dstrect=self.press_rect)
 
         scaledAudio = self.volume_rect.copy()
@@ -222,9 +217,10 @@ class Menu(State):
 
         if event.type == MOUSEMOTION:
             self.mp = event.pos
-        
+                    
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
-                if self.hovered:
+                if Mouse.hovered:
                     self.scale_anim = True
                     self.switch = True
+                    

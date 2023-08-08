@@ -40,12 +40,11 @@ class GameOver(State):
         with open('src/assets/GameOverRandom.json', 'r') as file:
             self.listText = load(file)['sentences'][:-1]
 
-<<<<<<< HEAD
-        print(self.listText)
-        self.RestartSound = pygame.mixer.Sound('src/assets/sound/restart.wav')
-=======
         self.RestartSound = AudioHandler.sounds['restart']
->>>>>>> b08594907cda29a36644af290fad4e9346e387a9
+
+        self.first_time = True
+
+        self.controls = self.to_texture(pygame.image.load('src/assets/controls.png'))
 
         self.update_screen()
 
@@ -75,6 +74,10 @@ class GameOver(State):
         scaledRestart.center = self.restartRect.center
 
         self.restartText.draw(srcrect=None, dstrect=scaledRestart)
+
+    def show_tutorial(self):
+        if self.first_time:
+            self.controls.draw(srcrect=None, dstrect=None)
 
     def restart_space(self):
         # RESTART SPACE STATE

@@ -6,7 +6,7 @@ from pygame.locals import *
 from src.scripts.audio_handler import AudioHandler
 from src.scripts.states import *
 from src.scripts.ui import *
-
+from src.scripts.mouse import Mouse
 
 import pygame_shaders
 
@@ -41,7 +41,7 @@ class App:
         self.states = {
             'main_menu': Menu(self, self.renderer),
             'space': Space(self, self.renderer),
-            "ocean": Ocean(self, self.renderer),
+            "ocean": Ocean(self, self.renderer, material="Aluminum"),
             'game_over': GameOver(self, self.renderer)
         }
 
@@ -61,9 +61,9 @@ class App:
         while True:
             self.clock.tick(self.fps)
 
-            self.state.update()
             for event in pygame.event.get():
                 self.state.handle_event(event)
+                Mouse.handle_event(event)
                 self.ui.events(event)
                 if event.type == QUIT:
                     pygame.quit()
@@ -74,6 +74,9 @@ class App:
                         self.crnt_state = 'game_over'
                         self.state = self.states[self.crnt_state]
                         self.state.update_screen()
+
+            self.state.update()
+            Mouse.update()
 
             renderer.draw_color = (255, 255, 255, 255)
             renderer.clear()

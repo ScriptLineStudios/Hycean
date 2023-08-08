@@ -14,6 +14,7 @@ class Face:
     height: int = -1
 
 
+# when pygame.Rect3 and pygame.FRect3 for pygame-ce
 class Rect3:
     def __init__(self, x, y, z, width, height, depth):
         self._x = x
