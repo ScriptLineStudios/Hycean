@@ -1,4 +1,6 @@
 from .state import State
+from src.scripts.states import *
+
 from src.scripts.entities.player import Player
 import math
 import time
@@ -313,7 +315,7 @@ class Player:
 
         self.cached_particle_surfaces = {}
 
-        self.health = 100
+        self.health = 1
         self.max_health = 100
         self.damage = 0
         self.moving = False
@@ -398,6 +400,7 @@ class Player:
             pygame.transform.scale(self.player_img, (self.player_img.get_width() - abs(self.acceleration.y)*4, self.player_img.get_height() - abs(self.acceleration.x)*4)), 
             self.flipped, False), (self.rect.x - self.scene.camera.x, self.rect.y - self.scene.camera.y))
         self.moving = False
+
 
 class Ocean(State):
     def __init__(self, *args, material, color="blue", **kwargs):
@@ -567,6 +570,7 @@ class Ocean(State):
         
         self.crnt_timer += 1
 
+
         self.splash_speed = max(self.splash_speed - 0.0001, 0.003)
 
         self.player.update(blocks)
@@ -592,6 +596,16 @@ class Ocean(State):
         self.lighting.blit(s, (-150, -90), special_flags=pygame.BLEND_RGBA_ADD)
         
         self.surface.blit(self.lighting, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+
+        if self.player.health <= 0:
+            self.app.crnt_state = "game_over"
+            g = GameOver(self.app, self.renderer)
+            g.ocean = True
+            g.ocean_surface = self.surface.copy()
+            g.update_screen()
+            self.app.state = g
+
         tex = pygame._sdl2.Texture.from_surface(self.renderer, pygame.transform.flip(self.surface, False, False))
         # self.renderer.target = tex
         # self.renderer.blit(, pygame.Rect(dx, dy, 1000, 800))
