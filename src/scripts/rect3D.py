@@ -14,6 +14,7 @@ class Face:
     height: int = -1
 
 
+# when pygame.Rect3 and pygame.FRect3 for pygame-ce
 class Rect3:
     def __init__(self, x, y, z, width, height, depth):
         self._x = x
@@ -202,7 +203,6 @@ class Rect3:
     
     def draw_debug(self, camera):
         #*imagine here drawing faces (for debug)*💀
-        # (could be done outside the rect3 class)
         ...
     
 
@@ -222,92 +222,7 @@ class Rect3:
             (x + width, y + height, z + depth),
             (x + width, y, z + depth),
         ]
-
-
-# Rect3, that moves
-class Player(Rect3):
-    def __init__(self, x, y, z, width, height, depth):
-        super().__init__(x, y, z, width, height, depth)
-        self.movement = {'straight': False, 'backwards': False, 'left': False, 'right': False}
-        self.velocity = pygame.Vector3(0, 0, 0)
-        self.acceleration = pygame.Vector3(0, 0, 0)
-
-        self.speed = 0.1
-
-    def update(self, obstacles):
-        self.resolve_collision(obstacles)
-
-        self.acceleration *= 0
-
-    def resolve_collision(self, obstacles):
-        self.x += self.velocity[0]
-
-        for obstacle in obstacles:
-            if self.collide_rect(obstacle):
-                if self.velocity.x > 0:
-                    self.x = obstacle.x - self.width
-
-                elif self.velocity.x < 0:
-                    self.x = obstacle.x + obstacle.width
-
-        self.y += self.velocity[1]
-        for obstacle in obstacles:
-            if self.collide_rect(obstacle):
-                if self.velocity.y > 0:
-                    self.y = obstacle.y - self.height
-
-                elif self.velocity.y < 0:
-                    self.y = obstacle.y + obstacle.height
-
-        self.z += self.velocity[2]
-        for obstacle in obstacles:
-            if self.collide_rect(obstacle):
-                if self.velocity.z > 0:
-                    self.z = obstacle.z - self.depth
-
-                elif self.velocity.z < 0:
-                    self.z = obstacle.z + obstacle.depth
-
-
-    def handle_event(self, event):
-        if event.type == KEYDOWN:
-            if event.key == K_w:
-                self.velocity.z = self.speed
-
-            if event.key == K_s:
-                self.velocity.z = -self.speed
-
-            if event.key == K_a:
-                self.velocity.x = -self.speed
-
-            if event.key == K_d:
-                self.velocity.x = self.speed
-
-            if event.key == K_SPACE:
-                self.velocity.y = self.speed
-
-            if event.key == K_LSHIFT: # K_LCTRL:
-                self.velocity.y = -self.speed
-
-        if event.type == KEYUP:
-            if event.key == K_w:
-                self.velocity.z = 0
-
-            if event.key == K_s:
-                self.velocity.z = 0
-
-            if event.key == K_a:
-                self.velocity.x = 0
-
-            if event.key == K_d:
-                self.velocity.x = 0
-
-            if event.key == K_SPACE:
-                self.velocity.y = 0
-
-            if event.key == K_LSHIFT: # K_LCTRL:
-                self.velocity.y = 0
-
+        
 
 def ray_to_rect(position, direction, rect, steps):
     #haven't tested

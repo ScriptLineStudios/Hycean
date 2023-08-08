@@ -1,5 +1,4 @@
 import pygame
-import glm
 
 from pygame import Vector2
 from pygame.locals import *

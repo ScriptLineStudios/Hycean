@@ -41,6 +41,8 @@ class GameOver(State):
             self.listText = load(file)['sentences'][:-1]
 
         self.RestartSound = AudioHandler.sounds['restart']
+        
+        self.first_time = True
 
         self.update_screen()
 
@@ -70,6 +72,10 @@ class GameOver(State):
         scaledRestart.center = self.restartRect.center
 
         self.restartText.draw(srcrect=None, dstrect=scaledRestart)
+
+    def show_tutorial(self):
+        if self.first_time:
+            self.controls.draw(srcrect=None, dstrect=None)
 
     def restart_space(self):
         # RESTART SPACE STATE

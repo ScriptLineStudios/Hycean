@@ -7,10 +7,10 @@ pygame.mixer.init()
 
 class AudioHandler:
     sounds = {}
-    with open('src/assets/sound/sounds.json') as file:
+    with open('src/sfx/sounds.json') as file:
         data = load(file)
         for path in data:
-            sounds[path] = pygame.mixer.Sound(f'src/assets/sound/{data[path]}')
+            sounds[path] = pygame.mixer.Sound(f'src/sfx/{data[path]}')
 
     @classmethod
     def set_volume(cls, volume):

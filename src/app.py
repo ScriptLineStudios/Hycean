@@ -6,11 +6,12 @@ from pygame.locals import *
 from src.scripts.audio_handler import AudioHandler
 from src.scripts.states import *
 from src.scripts.ui import *
-
+from src.scripts.mouse import Mouse
 
 import pygame_shaders
 
 pygame.init()
+
 
 class App:
     def __init__(self):
@@ -42,8 +43,9 @@ class App:
         self.states = {
             'main_menu': Menu(self, self.renderer),
             'space': Space(self, self.renderer),
-            "ocean": Ocean(self, self.renderer, material="Silver"),
-            'game_over': GameOver(self, self.renderer)
+            "ocean": Ocean(self, self.renderer, material="Aluminum"),
+            'game_over': GameOver(self, self.renderer),
+            'victory': Victory(self, self.renderer)
         }
 
         self.crnt_state = 'main_menu'
@@ -62,24 +64,25 @@ class App:
         while True:
             self.clock.tick(self.fps)
 
-            self.state.update()
             for event in pygame.event.get():
                 self.state.handle_event(event)
+                self.states['victory'].handle_event(event)
+                Mouse.handle_event(event)
                 self.ui.events(event)
+
                 if event.type == QUIT:
                     pygame.quit()
                     raise SystemExit
+
+            self.state.update()
+            Mouse.update()
 
             renderer.draw_color = (255, 255, 255, 255)
             renderer.clear()
 
             self.state.render()
 
-            if self.crnt_state != "game_over" and self.crnt_state != "main_menu":
+            if not self.crnt_state in ["game_over", "main_menu", "victory"]:
                 self.ui.render()
 
             renderer.present()
-            try:
-                self.state.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      
-            except:
-                self.window.title = f'Game Title FPS: {round(self.clock.get_fps())}'      

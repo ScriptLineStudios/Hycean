@@ -7,12 +7,15 @@ from src.scripts.particles import Stars, JetFlame
 from src.scripts.controller import Controller
 from src.scripts.land_indicator import LandIndicator
 from src.scripts.audio_handler import AudioHandler
+from src.scripts.tutorial import Tutorial
 from src.scripts.states import Ocean
 
 from copy import copy
 import random
 
 import pygame
+from pygame.locals import *
+
 pygame.font.init()
 
 import glm
@@ -26,14 +29,14 @@ class Space(State):
 
         self.ScreenSize = (1000, 800)
 
-        self.music = pygame.mixer.music.load("src/assets/sound/ambientspacemusic.mp3")
+        self.music = pygame.mixer.music.load("src/sfx/ambientspacemusic.mp3")
         pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play(-1)
 
         self.engine_sound = AudioHandler.sounds['engine']
         self.engine_sound.set_volume(0.4)
 
-        self.land_sound = pygame.mixer.Sound("src/assets/sound/land.wav")
+        self.land_sound = AudioHandler.sounds['land']
         self.land_sound.set_volume(0.4)
         #put actual here
 
@@ -87,6 +90,8 @@ class Space(State):
         self.moving = False
         self.acceleration = 0
 
+        self.Tutorial = Tutorial(self.renderer, self.app)
+
         self.game_over = False
         self.cutscene = False
         self.cutscene_surface = pygame.Surface((500, 400), pygame.SRCALPHA)
@@ -96,6 +101,21 @@ class Space(State):
         self.gps = None
         self.t = 0
         self.cutscene_complete = False
+
+    def update_player_rect(self):
+        playerPos = pygame.Vector3(self.camera.position)
+
+        orientation = pygame.Vector3(
+            glm.normalize(self.camera.orientation)
+        )
+
+        up = pygame.Vector3(0, 1, 0)
+        right = orientation.copy()
+        right = right.cross(up)
+
+        playerPos -= orientation * 5
+
+        return playerPos
 
     def update(self):
         self.controller.update()
@@ -110,30 +130,31 @@ class Space(State):
         self.camera.position.z -= glm.normalize(self.camera.orientation).z / 7 * self.acceleration
         self.camera.position.y -= glm.normalize(self.camera.orientation).y / 5 * self.acceleration
 
-        playerPos = copy(self.camera.position)
+        playerPos = self.update_player_rect()
 
-        playerPos.x -= glm.normalize(self.camera.orientation).x * 5
-        playerPos.z -= glm.normalize(self.camera.orientation).z * 5
-        playerPos.y -= glm.normalize(self.camera.orientation).y * 5
+        #playerPos.x -= glm.normalize(self.camera.orientation).x * 5
+        #playerPos.z -= glm.normalize(self.camera.orientation).z * 5
+        #playerPos.y -= glm.normalize(self.camera.orientation).y * 5
 
-        playerPos.z += 0.5
-        playerPos.y -= 3
+        #playerPos.z += 0.5
+        #playerPos.y -= 3
 
         if self.moving:
             self.JetFlame.add_particle(playerPos)
 
         self.player.update(playerPos)
+        
+        if self.Tutorial.finished:
+            if random.randrange(0, 200) == 4:
+                print("asteroid")
+                x, y = random.randrange(15, 30), 0
+                asteroid = Asteroid(self)
+                asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.z - glm.normalize(self.camera.orientation).z * x)
+                direction = glm.normalize(asteroid.position - self.camera.position)
+                asteroid.direction = -direction / 10
 
-        if random.randrange(0, 200) == 4:
-            print("asteroid")
-            x, y = random.randrange(15, 30), 0
-            asteroid = Asteroid(self)
-            asteroid.position = glm.vec3(self.camera.position.x - glm.normalize(self.camera.orientation).x * x, 0, self.camera.position.z - glm.normalize(self.camera.orientation).z * x)
-            direction = glm.normalize(asteroid.position - self.camera.position)
-            asteroid.direction = -direction / 10
-
-            self.obstacles.append(asteroid)
-            self.model_renderer.add_model(asteroid)
+                self.obstacles.append(asteroid)
+                self.model_renderer.add_model(asteroid)
 
         self.player.rot_x += -self.player.rot_x / 50
         self.player.rot_z += -self.player.rot_z / 50
@@ -240,7 +261,7 @@ class Space(State):
         if self.gps is not None:
             pygame.draw.line(self.map_texture, (0, 200, 0), (self.camera.position.x + 500, self.camera.position.z + 500), self.gps, 9)
 
-        # self.JetFlame.render(matrix)
+        self.JetFlame.render(matrix)
 
         self.LandIndicator.draw()
 
@@ -265,18 +286,21 @@ class Space(State):
             self.app.state = self.app.states[self.app.crnt_state]
             self.app.state.start()
 
+        self.Tutorial.draw()
+
         text = self.font.render(f"x: {int(self.camera.position.x)} y: {int(self.camera.position.y)} z: {int(self.camera.position.z)}", False, (255, 255, 255))
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, text), pygame.Rect(0, 210, text.get_width(), text.get_height()))
         self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.map_texture), pygame.Rect(0, 0, 200, 200))
 
     def handle_event(self, event):
         self.controller.handle_event(event)
+        self.Tutorial.handle_event(event)
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
+        if event.type == KEYDOWN:
+            if event.key == K_SPACE:
                 self.game_over = True
 
-            if event.key == pygame.K_RETURN:
+            if event.key == K_RETURN:
                 if self.LandIndicator.planet is not None:
                     print(f"Its cutscene time {self.LandIndicator.planet}")
                     self.cutscene = True
@@ -285,11 +309,20 @@ class Space(State):
                         if type(obstacle) == Asteroid:
                             self.obstacles.remove(obstacle)
 
-            if event.key == pygame.K_ESCAPE:
+            if event.key == K_ESCAPE:
                 pygame.mouse.set_visible(self.camera.hidden)
                 self.camera.hidden = not self.camera.hidden
+            
+            if event.key == K_LSHIFT:
+                self.engine_sound.play(-1)
+                self.moving = True
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == KEYUP:
+            if event.key == K_LSHIFT:
+                self.engine_sound.fadeout(40)
+                self.moving = False
+
+        if event.type == MOUSEBUTTONDOWN:
             mp = pygame.mouse.get_pos()
             if event.button == 1 and mp[0] < 700:
                 pygame.mouse.set_pos((500, 400))
@@ -300,7 +333,7 @@ class Space(State):
                 self.engine_sound.play(-1)
                 self.moving = True
 
-        elif event.type == pygame.MOUSEBUTTONUP:
+        elif event.type == MOUSEBUTTONUP:
             if event.button == 3:
                 self.engine_sound.fadeout(40)
                 self.moving = False
