@@ -11,5 +11,6 @@
     "explosion": "explosion.wav",
     "missile": "missile.wav",
     "hurt": "hurt.wav",
-    "pickup": "pickup.wav"
+    "pickup": "pickup.wav",
+    "death": "death.wav"
 }

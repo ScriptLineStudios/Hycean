@@ -168,6 +168,38 @@ class Anglerfish(Enemy):
 
         super().update()
 
+class Blob(Enemy):
+    def __init__(self, scene, position):
+        self.image = pygame.image.load("src/assets/eel.png")
+
+        self.speed = 2.0
+        self.reverse = 1
+        self.timeout = 0
+
+        self.images = [pygame.image.load("src/assets/blob1.png"), pygame.image.load("src/assets/blob2.png"), pygame.image.load("src/assets/blob3.png")]
+        self.index = 0
+        super().__init__(scene, position, None, self.images)
+
+    def update(self):
+        self.direction_offset = pygame.Vector2(random.uniform(-3, 3), random.uniform(-3, 3))
+        direction = (self.position - (self.scene.player.position + self.direction_offset)).normalize()
+
+        rect = pygame.Rect(*(self.position), 32, 16)
+        if self.reverse == 1:
+            if rect.colliderect(self.scene.player.rect):
+                self.scene.player.take_damage(5)
+                self.reverse = -1
+                self.timeout = random.randrange(40, 70)
+
+        if self.timeout > 0:
+            self.timeout -= 1
+        else:
+            self.reverse = 1
+
+        self.position -= self.reverse * direction * self.speed
+
+        super().update()
+
 class Eel(Enemy):
     def __init__(self, scene, position):
         self.image = pygame.image.load("src/assets/eel.png")
@@ -314,7 +346,7 @@ class Player:
 
         self.cached_particle_surfaces = {}
 
-        self.health = 1
+        self.health = 100
         self.max_health = 100
         self.damage = 0
         self.moving = False
@@ -461,6 +493,8 @@ class Ocean(State):
 
         self.enemy_choices = {
             "blue": [Anglerfish, Eel, Anglerfish, Eel, Octo],
+            "red": [Blob, Blob],
+
         }
 
         self.light_index = 0
@@ -594,7 +628,10 @@ class Ocean(State):
 
         if self.player.health <= 0:
             self.app.crnt_state = "game_over"
+            
             g = GameOver(self.app, self.renderer)
+            AudioHandler.sounds["death"].play()
+
             g.ocean = True
             g.ocean_surface = self.surface.copy()
             g.update_screen()

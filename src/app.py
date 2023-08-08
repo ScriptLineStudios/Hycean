@@ -55,7 +55,7 @@ class App:
         self.states = {
             'main_menu': Menu(self, self.renderer),
             'space': Space(self, self.renderer),
-            "ocean": Ocean(self, self.renderer, material="Aluminum"),
+            "ocean": Ocean(self, self.renderer, color="red", material="Aluminum"),
             'game_over': GameOver(self, self.renderer),
             'victory': Victory(self, self.renderer)
         }

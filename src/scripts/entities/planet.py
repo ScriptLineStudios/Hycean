@@ -28,7 +28,7 @@ class Planet(Entity):
             self.primary_material = random.choice(list(self.app.needed_resources.items()))
             del self.app.needed_resources[self.primary_material[0]]
         except:
-            self.primary_material = None
+            self.primary_material = (None, None)
             
         self.planet_types = ["blue", "red"]
         
