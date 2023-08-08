@@ -38,6 +38,7 @@ class App:
         self.window = pygame._sdl2.Window(caption, self.ScreenSize, borderless=False, opengl=False)
         self.renderer = pygame._sdl2.Renderer(self.window)
 
+
         self.states = {
             'main_menu': Menu(self, self.renderer),
             'space': Space(self, self.renderer),
@@ -69,11 +70,6 @@ class App:
                     pygame.quit()
                     raise SystemExit
                 
-                if event.type == KEYDOWN:
-                    if event.key == K_SPACE:
-                        self.crnt_state = 'game_over'
-                        self.state = self.states[self.crnt_state]
-                        self.state.update_screen()
 
             self.state.update()
             Mouse.update()

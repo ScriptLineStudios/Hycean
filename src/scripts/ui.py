@@ -82,44 +82,57 @@ class UI:
         off = math.sin(self.time) * 5
 
         self.computer_rect = pygame.Rect(864 - off/2, 70 - off/2, 64 + off, 64 + off)
-        self.renderer.blit(self.computer_texture, self.computer_rect)
 
         self.buttons = []
-        if self.computer_active:
-            text = self.font.render("System", False, (255, 255, 255))
-            resources = self.small_font.render("Needed Resources\n", False, (255, 255, 255))
 
-            self.surface.blit(text, (5, 6))
-            self.surface.blit(resources, (5, 6 + text.get_height() * 1.5))
-            
-            for i, key in enumerate(self.app.needed_resources_stable.keys()):
-                needed_resources = f"{key}: {self.app.needed_resources_stable[key]}\n"
-                t = self.small_font.render(needed_resources, False, "white")
-                self.surface.blit(t, (5, 100 + i * t.get_height() * 3.5))
-                b = Button(self.app, "locate", pygame.Vector2(10, 100 + i * t.get_height() * 3.5 + 25))
-                b.material = key
-                self.buttons.append(b)
+        if self.app.crnt_state == "space":
+            self.renderer.blit(self.computer_texture, self.computer_rect)
+            if self.computer_active:
+                text = self.font.render("System", False, (255, 255, 255))
+                resources = self.small_font.render("Needed Resources\n", False, (255, 255, 255))
 
-            for button in self.buttons:
-                button.render(self.surface)
+                self.surface.blit(text, (5, 6))
+                self.surface.blit(resources, (5, 6 + text.get_height() * 1.5))
+                
+                for i, key in enumerate(self.app.needed_resources_stable.keys()):
+                    needed_resources = f"{key}: {self.app.needed_resources_stable[key]}\n"
+                    t = self.small_font.render(needed_resources, False, "white")
+                    self.surface.blit(t, (5, 100 + i * t.get_height() * 3.5))
+                    b = Button(self.app, "locate", pygame.Vector2(10, 100 + i * t.get_height() * 3.5 + 25))
+                    b.material = key
+                    self.buttons.append(b)
 
-            if self.panel_x > 700:
-                self.panel_x -= 20
-            self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.surface), pygame.Rect(self.panel_x, 0, 800, 800))
+                for button in self.buttons:
+                    button.render(self.surface)
+
+                if self.panel_x > 700:
+                    self.panel_x -= 20
+                self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.surface), pygame.Rect(self.panel_x, 0, 800, 800))
+            else:
+                if self.panel_x < 1000:
+                    self.panel_x += 20
+                self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.surface), pygame.Rect(self.panel_x, 0, 800, 800))
         else:
-            if self.panel_x < 1000:
-                self.panel_x += 20
-            self.renderer.blit(pygame._sdl2.Texture.from_surface(self.renderer, self.surface), pygame.Rect(self.panel_x, 0, 800, 800))
+            self.renderer.blit(self.computer_texture, self.computer_rect)
 
     def events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                mp = pygame.Vector2(pygame.mouse.get_pos())
-                if self.computer_rect.collidepoint(mp):
-                    self.click.play()
-                    self.clicked = True
-                    self.computer_active = True
+                if self.app.crnt_state == "space":
+                    mp = pygame.Vector2(pygame.mouse.get_pos())
+                    if self.computer_rect.collidepoint(mp):
+                        self.click.play()
+                        self.clicked = True
+                        self.computer_active = True
 
-                for button in self.buttons:
-                    if button.global_rect.collidepoint(mp):
-                        button.on_click()
+                    for button in self.buttons:
+                        if button.global_rect.collidepoint(mp):
+                            button.on_click()
+                else:
+                    print("ocean")
+                    mp = pygame.Vector2(pygame.mouse.get_pos())
+                    if self.computer_rect.collidepoint(mp):
+                        self.click.play()
+                        self.clicked = True
+                        self.app.crnt_state = "space"
+                        self.app.state = self.app.states[self.app.crnt_state]

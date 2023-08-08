@@ -41,7 +41,7 @@ class GameOver(State):
             self.listText = load(file)['sentences'][:-1]
 
         self.RestartSound = AudioHandler.sounds['restart']
-
+        
         self.first_time = True
 
         self.controls = self.to_texture(pygame.image.load('src/assets/controls.png'))
