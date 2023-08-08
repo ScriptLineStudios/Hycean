@@ -129,7 +129,6 @@ class UI:
                         if button.global_rect.collidepoint(mp):
                             button.on_click()
                 else:
-                    print("ocean")
                     mp = pygame.Vector2(pygame.mouse.get_pos())
                     if self.computer_rect.collidepoint(mp):
                         self.click.play()

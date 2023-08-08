@@ -12,7 +12,6 @@ from src.scripts.states import Ocean
 from copy import copy
 import random
 
-
 import pygame
 pygame.font.init()
 

@@ -69,7 +69,6 @@ class App:
                 if event.type == QUIT:
                     pygame.quit()
                     raise SystemExit
-                
 
             renderer.draw_color = (255, 255, 255, 255)
             renderer.clear()
